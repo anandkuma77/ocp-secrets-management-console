@@ -1,5 +1,5 @@
 ---
-image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:2725501adf562f4fbf91f59f295cf49d97fc40aeef7427ef74a943a96a56b3f4
+image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:74dd7d391ebf43b1dd0f28ef150fcfc81987db2decc2da3bc399abf974aeb2cb
 name: console-plugin-operator.v0.1.0
 package: console-plugin-operator
 properties:
@@ -143,7 +143,7 @@ properties:
       name: Red Hat
       url: https://www.redhat.com
 relatedImages:
-- image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:2725501adf562f4fbf91f59f295cf49d97fc40aeef7427ef74a943a96a56b3f4
+- image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:74dd7d391ebf43b1dd0f28ef150fcfc81987db2decc2da3bc399abf974aeb2cb
   name: ""
 - image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-rhel9@sha256:b1cf5c4e26bd1db0fae189903a8b4f8583f962e08590f5a6bfcb29f6bf5288b7
   name: ocp-secrets-management-operator
