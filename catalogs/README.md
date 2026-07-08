@@ -27,8 +27,9 @@ result to `quay.io/redhat-user-workloads/secrets-management-console-tenant/conso
 2. Add an entry for the new version to `channel.yaml` (with `replaces` and, typically, a
    `skipRange` pointing at the previous version) — this is *not* done automatically by
    `update-catalog.sh`/`make update-catalog`.
-3. Render the bundle into the catalog with `make update-catalog` (this downloads `opm` locally on
-   demand via `make get-opm`, no need to have it on `PATH`):
+3. Render the bundle into the catalog with `make update-catalog`. `OPERATOR_BUNDLE_IMAGE` is
+   **required** — the target fails fast if it is unset. This downloads `opm` locally on demand via
+   `make get-opm` (no need to have it on `PATH`):
 
    ```bash
    make update-catalog \
@@ -45,9 +46,8 @@ result to `quay.io/redhat-user-workloads/secrets-management-console-tenant/conso
    `bundle-vX.Y.Z.yaml`, runs `opm validate`, and optionally copies the same bundle file into other
    `catalogs/v*/catalog` directories per `REPLICATE_BUNDLE_FILE_IN_CATALOGS`
    (`no` / `yes` / `4.23,5.0` / `4.22-5.0`).
-4. `make catalog` combines the above with building the catalog image
-   (`OPERATOR_BUNDLE_IMAGE=... make catalog`); `OPERATOR_BUNDLE_IMAGE` is required and the target
-   fails fast if it's unset.
+4. `make catalog` combines `update-catalog` + `catalog-build` into a single command;
+   `OPERATOR_BUNDLE_IMAGE` is equally required here.
 
 Other useful targets: `make catalog-validate` (just `opm validate`), `make get-opm` (downloads
 `opm` into `bin/tools/opm`, override with `OPM=opm` to use one already on `PATH`).
