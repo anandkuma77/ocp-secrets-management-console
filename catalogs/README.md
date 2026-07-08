@@ -1,7 +1,7 @@
 # File-Based Catalog (FBC)
 
 This directory contains the [file-based catalog](https://olm.operatorframework.io/docs/reference/file-based-catalogs/)
-(FBC) for the `ocp-secrets-management-operator` package, used to publish the operator to an OLM
+(FBC) for the `console-plugin-operator` package, used to publish the operator to an OLM
 catalog (e.g. `redhat-operator-index`) so it can be installed via OperatorHub/Subscriptions.
 
 ```
@@ -9,7 +9,7 @@ catalogs/
   v4.22/
     Containerfile                                    # builds the FBC image (opm serve /configs)
     catalog/
-      ocp-secrets-management-operator/
+      console-plugin-operator/
         package.yaml                                 # olm.package: name, icon, defaultChannel
         channel.yaml                                 # olm.channel: entries (versions) per channel
         bundle-v0.1.0.yaml                            # olm.bundle: one file per released bundle version
