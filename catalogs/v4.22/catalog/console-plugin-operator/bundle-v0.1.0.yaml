@@ -1,5 +1,5 @@
 ---
-image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:a6a6b1929312f4fd7c05d186812046d65d745b58f8155e0e6f3e7696ad266ed8
+image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:07e8b0a007a1291ad71940fe4e857ff55a6a20d79d81e0061859f542212afbcd
 name: console-plugin-operator.v0.1.0
 package: console-plugin-operator
 properties:
@@ -91,7 +91,16 @@ properties:
 
       ### Getting Started
 
-      After installing the operator, create a `SecretsManagementConfig` resource:
+      After installing the operator, it will automatically:
+      1. Create a default `SecretsManagementConfig` resource
+      2. Create default RBAC ClusterRoles
+      3. Deploy the console plugin
+      4. Register the plugin with OpenShift Console
+      5. Detect installed operators
+
+      No manual configuration is required. The console plugin will appear automatically after installation.
+
+      To customize the configuration, edit the auto-created `SecretsManagementConfig` resource:
 
       ```yaml
       apiVersion: secrets-management.openshift.io/v1alpha1
@@ -104,12 +113,6 @@ properties:
         plugin:
           replicas: 1
       ```
-
-      The operator will:
-      1. Create default RBAC ClusterRoles
-      2. Deploy the console plugin
-      3. Register the plugin with OpenShift Console
-      4. Detect installed operators
     displayName: External Secrets Management Console
     installModes:
     - supported: false
@@ -143,7 +146,7 @@ properties:
       name: Red Hat
       url: https://www.redhat.com
 relatedImages:
-- image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:a6a6b1929312f4fd7c05d186812046d65d745b58f8155e0e6f3e7696ad266ed8
+- image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:07e8b0a007a1291ad71940fe4e857ff55a6a20d79d81e0061859f542212afbcd
   name: ""
 - image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-rhel9@sha256:b1cf5c4e26bd1db0fae189903a8b4f8583f962e08590f5a6bfcb29f6bf5288b7
   name: ocp-secrets-management-operator
