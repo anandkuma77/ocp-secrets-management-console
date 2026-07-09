@@ -1,5 +1,5 @@
 ---
-image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:74dd7d391ebf43b1dd0f28ef150fcfc81987db2decc2da3bc399abf974aeb2cb
+image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:a6a6b1929312f4fd7c05d186812046d65d745b58f8155e0e6f3e7696ad266ed8
 name: console-plugin-operator.v0.1.0
 package: console-plugin-operator
 properties:
@@ -37,8 +37,8 @@ properties:
     apiServiceDefinitions: {}
     crdDescriptions:
       owned:
-      - description: SecretsManagementConfig is the configuration for the OCP Secrets
-          Management console plugin
+      - description: SecretsManagementConfig is the configuration for the External
+          Secrets Management Console plugin
         displayName: Secrets Management Config
         kind: SecretsManagementConfig
         name: secretsmanagementconfigs.secrets-management.openshift.io
@@ -68,9 +68,9 @@ properties:
           - urn:alm:descriptor:text
         version: v1alpha1
     description: |
-      ## OCP Secrets Management Console Plugin
+      ## External Secrets Management Console
 
-      The OCP Secrets Management operator provides a unified OpenShift Console plugin for managing
+      The External Secrets Management Console operator provides a unified OpenShift Console plugin for managing
       secrets-related Custom Resources from multiple operators:
 
       * **cert-manager** - Certificates, Issuers, ClusterIssuers
@@ -110,7 +110,7 @@ properties:
       2. Deploy the console plugin
       3. Register the plugin with OpenShift Console
       4. Detect installed operators
-    displayName: OCP Secrets Management
+    displayName: External Secrets Management Console
     installModes:
     - supported: false
       type: OwnNamespace
@@ -143,7 +143,7 @@ properties:
       name: Red Hat
       url: https://www.redhat.com
 relatedImages:
-- image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:74dd7d391ebf43b1dd0f28ef150fcfc81987db2decc2da3bc399abf974aeb2cb
+- image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:a6a6b1929312f4fd7c05d186812046d65d745b58f8155e0e6f3e7696ad266ed8
   name: ""
 - image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-rhel9@sha256:b1cf5c4e26bd1db0fae189903a8b4f8583f962e08590f5a6bfcb29f6bf5288b7
   name: ocp-secrets-management-operator
