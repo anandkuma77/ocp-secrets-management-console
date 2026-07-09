@@ -1,5 +1,5 @@
 ---
-image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:07e8b0a007a1291ad71940fe4e857ff55a6a20d79d81e0061859f542212afbcd
+image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:ca2ecbd79894fd3130dbb32d74f35eb44ab46f9743e08925cea3e422d23a576d
 name: console-plugin-operator.v0.1.0
 package: console-plugin-operator
 properties:
@@ -18,7 +18,7 @@ properties:
       alm-examples: '[]'
       capabilities: Basic Install
       categories: Security
-      containerImage: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-rhel9@sha256:b1cf5c4e26bd1db0fae189903a8b4f8583f962e08590f5a6bfcb29f6bf5288b7
+      containerImage: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-rhel9@sha256:a8853660dce6be23c0e5558819a78edf6600bc93df3ae12478e55c0667d9b5da
       createdAt: "2026-03-06T12:08:43Z"
       description: Unified console plugin for managing secrets across cert-manager,
         External Secrets Operator, and Secrets Store CSI Driver
@@ -146,10 +146,10 @@ properties:
       name: Red Hat
       url: https://www.redhat.com
 relatedImages:
-- image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:07e8b0a007a1291ad71940fe4e857ff55a6a20d79d81e0061859f542212afbcd
+- image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-bundle@sha256:ca2ecbd79894fd3130dbb32d74f35eb44ab46f9743e08925cea3e422d23a576d
   name: ""
-- image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-rhel9@sha256:b1cf5c4e26bd1db0fae189903a8b4f8583f962e08590f5a6bfcb29f6bf5288b7
+- image: registry.stage.redhat.io/external-secrets-management/console-plugin-operator-rhel9@sha256:a8853660dce6be23c0e5558819a78edf6600bc93df3ae12478e55c0667d9b5da
   name: ocp-secrets-management-operator
-- image: registry.stage.redhat.io/external-secrets-management/console-plugin-rhel9@sha256:8cc2819cdf72d98b7c21c4048954976a80d99223640518914b69273bc93be4de
+- image: registry.stage.redhat.io/external-secrets-management/console-plugin-rhel9@sha256:665be215702e293b991654c44ea0e804c821f902b39a92e18003db0bc295dca0
   name: ocp-secrets-management-plugin
 schema: olm.bundle
