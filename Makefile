@@ -214,6 +214,69 @@ catalog-push: require-container-runtime ## Push the FBC catalog image (default: 
 .PHONY: catalog
 catalog: get-opm update-catalog catalog-build ## Update catalog using OPERATOR_BUNDLE_IMAGE (required) and build the catalog image
 
+##@ Local Dev Catalog (build entire FBC chain locally, no Konflux needed)
+
+## Personal registry prefix for local dev builds (e.g. quay.io/yourusername)
+DEV_REGISTRY ?= quay.io/$(shell whoami)
+## Dev image tags
+DEV_OPERATOR_IMG ?= $(DEV_REGISTRY)/ocp-secrets-management-operator:dev
+DEV_PLUGIN_IMG ?= $(DEV_REGISTRY)/ocp-secrets-management:dev
+DEV_BUNDLE_IMG ?= $(DEV_REGISTRY)/console-plugin-operator-bundle:dev
+DEV_CATALOG_IMG ?= $(DEV_REGISTRY)/console-plugin-operator-fbc:dev
+## Bundle file to render into
+DEV_BUNDLE_FILE ?= bundle-v0.1.0.yaml
+
+.PHONY: update-catalog-local
+update-catalog-local: get-opm ## Render FBC catalog from local operator/bundle/ directory (no registry push needed)
+	@echo "Rendering catalog from local bundle directory..."
+	@mkdir -p "$(CATALOG_DIR)/console-plugin-operator"
+	$(OPM) render operator/bundle/ --migrate-level=bundle-object-to-csv-metadata -o yaml \
+		> "$(CATALOG_DIR)/console-plugin-operator/$(DEV_BUNDLE_FILE)"
+	@echo "Validating catalog..."
+	$(OPM) validate $(CATALOG_DIR)
+	@echo "Done. Catalog updated from local bundle."
+
+.PHONY: dev-catalog
+dev-catalog: get-opm update-catalog-local catalog-validate ## Render from local bundle + validate (full local FBC refresh)
+	@echo "Building local FBC catalog image $(DEV_CATALOG_IMG)..."
+	$(CONTAINER_RUNTIME) build -t $(DEV_CATALOG_IMG) -f catalogs/$(CATALOG_VERSION)/Containerfile catalogs/$(CATALOG_VERSION)
+	@echo "FBC image ready: $(DEV_CATALOG_IMG)"
+
+.PHONY: dev-images
+dev-images: require-container-runtime ## Build operator + plugin + bundle + FBC images locally
+	@echo "=== Building operator image ==="
+	$(CONTAINER_RUNTIME) build -t $(DEV_OPERATOR_IMG) -f operator/Containerfile.ocp-secrets-management-operator operator/
+	@echo "=== Building plugin image ==="
+	$(CONTAINER_RUNTIME) build -t $(DEV_PLUGIN_IMG) -f Dockerfile .
+	@echo "=== Building FBC catalog image ==="
+	$(MAKE) dev-catalog DEV_CATALOG_IMG=$(DEV_CATALOG_IMG)
+	@echo ""
+	@echo "=== All images built ==="
+	@echo "  Operator: $(DEV_OPERATOR_IMG)"
+	@echo "  Plugin:   $(DEV_PLUGIN_IMG)"
+	@echo "  Catalog:  $(DEV_CATALOG_IMG)"
+
+.PHONY: dev-push
+dev-push: require-container-runtime ## Push all dev images to your personal registry
+	@echo "Pushing operator image..."
+	$(CONTAINER_RUNTIME) push $(DEV_OPERATOR_IMG)
+	@echo "Pushing plugin image..."
+	$(CONTAINER_RUNTIME) push $(DEV_PLUGIN_IMG)
+	@echo "Pushing FBC catalog image..."
+	$(CONTAINER_RUNTIME) push $(DEV_CATALOG_IMG)
+	@echo ""
+	@echo "=== All images pushed ==="
+	@echo "  Operator: $(DEV_OPERATOR_IMG)"
+	@echo "  Plugin:   $(DEV_PLUGIN_IMG)"
+	@echo "  Catalog:  $(DEV_CATALOG_IMG)"
+
+.PHONY: dev-deploy-catalog
+dev-deploy-catalog: ## Deploy the dev FBC catalog to the current OCP cluster (push first: make dev-push)
+	@echo "Deploying CatalogSource with image: $(DEV_CATALOG_IMG)"
+	@oc delete catalogsource console-plugin-operator-catalog -n openshift-marketplace 2>/dev/null || true
+	@printf 'apiVersion: operators.coreos.com/v1alpha1\nkind: CatalogSource\nmetadata:\n  name: console-plugin-operator-catalog\n  namespace: openshift-marketplace\nspec:\n  sourceType: grpc\n  image: $(DEV_CATALOG_IMG)\n  displayName: "External Secrets Management Console (Dev)"\n  publisher: "Dev"\n  updateStrategy:\n    registryPoll:\n      interval: 1m\n' | oc apply -f -
+	@echo "CatalogSource deployed. Check: oc get catalogsource -n openshift-marketplace"
+
 ##@ Update & verify (run after code changes / before PR)
 
 # Short prompt for AI: follow the detailed task in the script (avoids escaping full content in make).
