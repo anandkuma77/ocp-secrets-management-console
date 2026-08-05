@@ -1,6 +1,13 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { EmptyState, EmptyStateBody, Alert, AlertVariant } from '@patternfly/react-core';
+import {
+  EmptyState,
+  EmptyStateBody,
+  Alert,
+  AlertVariant,
+  Pagination,
+  PaginationVariant,
+} from '@patternfly/react-core';
 import { SearchIcon } from '@patternfly/react-icons';
 
 interface Column {
@@ -21,20 +28,41 @@ interface ResourceTableProps {
   emptyStateBody?: string;
   /** When set, fallback empty state body is project-aware (e.g. "in project X" vs "in the demo project"). */
   selectedProject?: string;
+  /** Default number of rows per page. */
+  defaultPerPage?: number;
   'data-test'?: string;
 }
+
+const DEFAULT_PER_PAGE = 10;
+
+const PER_PAGE_OPTIONS = [
+  { title: '10', value: 10 },
+  { title: '20', value: 20 },
+  { title: '50', value: 50 },
+  { title: '100', value: 100 },
+];
 
 export const ResourceTable: React.FC<ResourceTableProps> = ({
   columns,
   rows,
-  loading = false,
+  loading,
   error,
   emptyStateTitle,
   emptyStateBody,
   selectedProject,
+  defaultPerPage,
   'data-test': dataTest,
 }) => {
   const { t } = useTranslation('plugin__ocp-secrets-management');
+  const resolvedDefaultPerPage =
+    typeof defaultPerPage === 'number' ? defaultPerPage : DEFAULT_PER_PAGE;
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(resolvedDefaultPerPage);
+
+  const itemCount = rows.length;
+  const maxPage = Math.max(1, Math.ceil(itemCount / perPage) || 1);
+  // Derive a safe page so deletes/filters that shrink the list never leave an empty page.
+  const currentPage = page > maxPage ? maxPage : page;
 
   const defaultEmptyStateBody =
     selectedProject && selectedProject !== 'all'
@@ -72,7 +100,7 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
           headingLevel="h4"
           titleText={emptyStateTitle || t('No resources found')}
         >
-          <EmptyStateBody>{emptyStateBody ?? defaultEmptyStateBody}</EmptyStateBody>
+          <EmptyStateBody>{emptyStateBody || defaultEmptyStateBody}</EmptyStateBody>
         </EmptyState>
       </div>
     );
@@ -84,9 +112,56 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
   const defaultWidth = hasSpecifiedWidths ? undefined : 100 / columns.length;
 
   const subtleBorder = '1px solid #e1e5e9';
+  const showPagination = itemCount > resolvedDefaultPerPage;
+  const pageStart = (currentPage - 1) * perPage;
+  const pagedRows = rows.slice(pageStart, pageStart + perPage);
+  const widgetBase = dataTest || 'resource-table';
+
+  const onSetPage = (
+    _event: React.MouseEvent | React.KeyboardEvent | MouseEvent,
+    newPage: number,
+  ) => {
+    setPage(newPage);
+  };
+
+  const onPerPageSelect = (
+    _event: React.MouseEvent | React.KeyboardEvent | MouseEvent,
+    newPerPage: number,
+    newPage: number,
+  ) => {
+    setPerPage(newPerPage);
+    setPage(newPage);
+  };
+
+  const pagination = (variant: typeof PaginationVariant.top, widgetId: string) => (
+    <div data-test={widgetId} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <Pagination
+        itemCount={itemCount}
+        page={currentPage}
+        perPage={perPage}
+        perPageOptions={PER_PAGE_OPTIONS}
+        onSetPage={onSetPage}
+        onPerPageSelect={onPerPageSelect}
+        variant={variant}
+        widgetId={widgetId}
+        titles={{
+          itemsPerPage: t('Items per page'),
+          perPageSuffix: t('per page'),
+          toFirstPageAriaLabel: t('Go to first page'),
+          toPreviousPageAriaLabel: t('Go to previous page'),
+          toNextPageAriaLabel: t('Go to next page'),
+          toLastPageAriaLabel: t('Go to last page'),
+          currPageAriaLabel: t('Current page'),
+          paginationAriaLabel: t('Pagination'),
+          ofWord: t('of'),
+        }}
+      />
+    </div>
+  );
 
   return (
     <div className="co-m-table-grid" style={{ border: 'none' }} data-test={dataTest}>
+      {showPagination && pagination(PaginationVariant.top, `${widgetBase}-pagination-top`)}
       <div className="table-responsive" style={{ border: 'none' }}>
         <table
           className="table table-hover"
@@ -101,7 +176,9 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
           <thead>
             <tr style={{ borderBottom: subtleBorder }}>
               {columns.map((column, index) => {
-                const width = hasSpecifiedWidths ? `${column.width || 0}%` : `${defaultWidth}%`;
+                const width = hasSpecifiedWidths
+                  ? `${String(column.width || 0)}%`
+                  : `${String(defaultWidth)}%`;
 
                 return (
                   <th
@@ -123,8 +200,8 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, rowIndex) => (
-              <tr key={rowIndex} style={{ borderBottom: subtleBorder }}>
+            {pagedRows.map((row, rowIndex) => (
+              <tr key={pageStart + rowIndex} style={{ borderBottom: subtleBorder }}>
                 {row.cells.map((cell, cellIndex) => (
                   <td
                     key={cellIndex}
@@ -138,7 +215,7 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
                       border: 'none',
                     }}
                   >
-                    {cell ?? null}
+                    {cell}
                   </td>
                 ))}
               </tr>
@@ -146,6 +223,7 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
           </tbody>
         </table>
       </div>
+      {showPagination && pagination(PaginationVariant.bottom, `${widgetBase}-pagination-bottom`)}
     </div>
   );
 };
