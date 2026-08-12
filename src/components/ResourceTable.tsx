@@ -161,7 +161,6 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
 
   return (
     <div className="co-m-table-grid" style={{ border: 'none' }} data-test={dataTest}>
-      {showPagination && pagination(PaginationVariant.top, `${widgetBase}-pagination-top`)}
       <div className="table-responsive" style={{ border: 'none' }}>
         <table
           className="table table-hover"

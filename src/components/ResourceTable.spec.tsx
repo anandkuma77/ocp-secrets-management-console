@@ -47,15 +47,14 @@ describe('ResourceTable', () => {
     it('does not show pagination when row count is within the default page size', () => {
       render(<ResourceTable columns={columns} rows={makeRows(10)} data-test="res-table" />);
 
-      expect(screen.queryByTestId('res-table-pagination-top')).not.toBeInTheDocument();
       expect(screen.queryByTestId('res-table-pagination-bottom')).not.toBeInTheDocument();
       expect(screen.getAllByRole('row')).toHaveLength(11); // header + 10 body rows
     });
 
-    it('shows top and bottom pagination when rows exceed the default page size', () => {
+    it('shows bottom pagination only when rows exceed the default page size', () => {
       render(<ResourceTable columns={columns} rows={makeRows(11)} data-test="res-table" />);
 
-      expect(screen.getByTestId('res-table-pagination-top')).toBeInTheDocument();
+      expect(screen.queryByTestId('res-table-pagination-top')).not.toBeInTheDocument();
       expect(screen.getByTestId('res-table-pagination-bottom')).toBeInTheDocument();
     });
 
@@ -66,7 +65,7 @@ describe('ResourceTable', () => {
       expect(screen.getByText('resource-10')).toBeInTheDocument();
       expect(screen.queryByText('resource-11')).not.toBeInTheDocument();
       expect(
-        within(screen.getByTestId('res-table-pagination-top')).getByRole('button', {
+        within(screen.getByTestId('res-table-pagination-bottom')).getByRole('button', {
           name: '1 - 10 of 25',
         }),
       ).toBeInTheDocument();
@@ -76,8 +75,8 @@ describe('ResourceTable', () => {
       const user = userEvent.setup();
       render(<ResourceTable columns={columns} rows={makeRows(25)} data-test="res-table" />);
 
-      const topPagination = screen.getByTestId('res-table-pagination-top');
-      await user.click(within(topPagination).getByRole('button', { name: 'Go to next page' }));
+      const bottomPagination = screen.getByTestId('res-table-pagination-bottom');
+      await user.click(within(bottomPagination).getByRole('button', { name: 'Go to next page' }));
 
       expect(screen.queryByText('resource-1')).not.toBeInTheDocument();
       expect(screen.getByText('resource-11')).toBeInTheDocument();
@@ -89,14 +88,14 @@ describe('ResourceTable', () => {
       const user = userEvent.setup();
       render(<ResourceTable columns={columns} rows={makeRows(25)} data-test="res-table" />);
 
-      const topPagination = screen.getByTestId('res-table-pagination-top');
-      await user.click(within(topPagination).getByRole('button', { name: 'Go to last page' }));
+      const bottomPagination = screen.getByTestId('res-table-pagination-bottom');
+      await user.click(within(bottomPagination).getByRole('button', { name: 'Go to last page' }));
 
       expect(screen.getByText('resource-21')).toBeInTheDocument();
       expect(screen.getByText('resource-25')).toBeInTheDocument();
       expect(screen.queryByText('resource-20')).not.toBeInTheDocument();
 
-      await user.click(within(topPagination).getByRole('button', { name: 'Go to first page' }));
+      await user.click(within(bottomPagination).getByRole('button', { name: 'Go to first page' }));
 
       expect(screen.getByText('resource-1')).toBeInTheDocument();
       expect(screen.queryByText('resource-21')).not.toBeInTheDocument();
@@ -106,8 +105,8 @@ describe('ResourceTable', () => {
       const user = userEvent.setup();
       render(<ResourceTable columns={columns} rows={makeRows(25)} data-test="res-table" />);
 
-      const topPagination = screen.getByTestId('res-table-pagination-top');
-      await user.click(within(topPagination).getByRole('button', { name: '1 - 10 of 25' }));
+      const bottomPagination = screen.getByTestId('res-table-pagination-bottom');
+      await user.click(within(bottomPagination).getByRole('button', { name: '1 - 10 of 25' }));
       await user.click(await screen.findByRole('menuitem', { name: '20 per page' }));
 
       expect(screen.getByText('resource-1')).toBeInTheDocument();
@@ -121,14 +120,14 @@ describe('ResourceTable', () => {
         <ResourceTable columns={columns} rows={makeRows(25)} data-test="res-table" />,
       );
 
-      const topPagination = screen.getByTestId('res-table-pagination-top');
-      await user.click(within(topPagination).getByRole('button', { name: 'Go to last page' }));
+      const bottomPagination = screen.getByTestId('res-table-pagination-bottom');
+      await user.click(within(bottomPagination).getByRole('button', { name: 'Go to last page' }));
       expect(screen.getByText('resource-25')).toBeInTheDocument();
 
       rerender(<ResourceTable columns={columns} rows={makeRows(5)} data-test="res-table" />);
 
       // With 5 rows (<= default page size), pagination hides and all rows show
-      expect(screen.queryByTestId('res-table-pagination-top')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('res-table-pagination-bottom')).not.toBeInTheDocument();
       expect(screen.getByText('resource-1')).toBeInTheDocument();
       expect(screen.getByText('resource-5')).toBeInTheDocument();
     });
@@ -144,7 +143,7 @@ describe('ResourceTable', () => {
       );
 
       // 12 <= 20, so pagination should be hidden and all rows shown
-      expect(screen.queryByTestId('res-table-pagination-top')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('res-table-pagination-bottom')).not.toBeInTheDocument();
       expect(screen.getByText('resource-12')).toBeInTheDocument();
     });
   });
