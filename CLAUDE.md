@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # Claude Code instructions
 
 This project uses generated CRD types and a shim at `src/components/crds/`. When you or a developer changes code that imports from `./crds` or `./components/crds` (or adds new CRD kinds), the following must stay in sync:
