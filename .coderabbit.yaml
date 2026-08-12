@@ -1,0 +1,39 @@
+language: en-US
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    drafts: false
+  knowledge_base:
+    filePatterns:
+      - "REVIEW.md"
+      - "AGENTS.md"
+    code_guidelines:
+      filePatterns:
+        - "docs/security-guidelines.md"
+        - "docs/performance-guidelines.md"
+        - "docs/error-handling-guidelines.md"
+        - "docs/api-contracts-guidelines.md"
+        - "docs/testing-guidelines.md"
+        - "docs/integration-guidelines.md"
+  path_filters:
+    - "!vendor/**"
+    - "!yarn.lock"
+    - "!**/zz_generated*"
+    - "!.tekton/**"
+    - "!integration-tests/cypress.config.js"
+    - "!.eslintrc.yml"
+    - "!charts/**/templates/_helpers.tpl"
+  path_instructions:
+    - path: "src/components/crds/**"
+      instructions: "Never hand-edit auto-generated files. Verify model objects have correct group/version/kind. Union types and type guards must cover all variants."
+    - path: "src/components/*Table.tsx"
+      instructions: "Follow existing table pattern: useK8sWatchResource → row mapping → ResourceTable + DeleteConfirmationModal. Use consoleFetch for delete."
+    - path: "src/hooks/**"
+      instructions: "Operator detection must use CRD existence check via consoleFetch. Return shape must include {installed, loading, error}."
+    - path: "integration-tests/**"
+      instructions: "Pre-merge tests use mock-api helpers from support/mock-api.ts. Do not add Cypress tests — use Playwright only."
+    - path: "charts/**"
+      instructions: "RBAC changes in rbac-clusterroles.yaml are security-sensitive — verify least-privilege."
