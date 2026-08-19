@@ -1,0 +1,103 @@
+stage: repo-assessment
+template: eval-generation/output-refined-templates/repo-assessment-template.md
+evals:
+  - id: EVAL-RA-001
+    round: 1
+    stage: repo-assessment
+    source_issue_ids: [R1-ISSUE-001]
+    input_refs:
+      - eval-generation/eval-generation-workflow/outputs/epic-bug-analysis/rca-summary.md
+      - eval-generation/eval-generation-workflow/template-gaps/repo-assessment-gaps.md
+    prompt: >-
+      Given a feature spec whose Target Files (§2) include a shared/reusable rendering or
+      data-aggregation component that is consumed by multiple existing call sites, does the
+      generated repo-assessment.md identify and characterize ALL current consumers of that
+      component, not just the consumer that motivated the feature?
+    assertions:
+      - type: must_cover_section
+        value: "§11.0 Shared Component Impact"
+      - type: must_identify_pattern
+        value: "enumerates every existing consumer of a shared/multi-consumer target component with a data-volume or edge-case profile note for each"
+      - type: must_cite_repo_evidence
+        value: "each listed consumer must be backed by an actual call-site reference, not an assumed/generic list"
+    scoring:
+      method: rubric
+      weight: 1.0
+      pass_criteria: "All listed consumers of the shared component are named with evidence; no consumer is omitted."
+    pass_threshold: 80
+
+  - id: EVAL-RA-002
+    round: 1
+    stage: repo-assessment
+    source_issue_ids: [R1-ISSUE-001]
+    input_refs:
+      - eval-generation/eval-generation-workflow/outputs/epic-bug-analysis/pattern-analysis.md
+    prompt: >-
+      Given a feature spec whose Target Files include a component with EXACTLY ONE existing
+      consumer (no shared blast radius), does the repo-assessment correctly state this
+      explicitly rather than either omitting the section or over-claiming a nonexistent
+      blast radius?
+    assertions:
+      - type: must_cover_section
+        value: "§11.0 Shared Component Impact"
+      - type: must_mention
+        value: "single consumer — no blast radius"
+      - type: must_identify_pattern
+        value: "does not fabricate additional consumers when only one exists"
+    scoring:
+      method: rubric
+      weight: 0.8
+      pass_criteria: "Section is present and accurately reflects single-consumer status without fabrication or omission."
+    pass_threshold: 80
+
+  - id: EVAL-RA-003
+    round: 2
+    stage: repo-assessment
+    source_issue_ids: [R2-ISSUE-001]
+    input_refs:
+      - eval-generation/eval-generation-workflow/outputs/epic-bug-analysis/rca-summary.md
+      - eval-generation/eval-generation-workflow/template-gaps/repo-assessment-gaps.md
+    prompt: >-
+      Given a feature spec whose target files include or introduce a match-based
+      confirmation/safety gate (typed-name confirmation, PIN/token match, etc.), does the
+      generated repo-assessment.md's §6 Security guardrails document any existing such
+      gates and explicitly state whether each guards against an empty/falsy
+      expected-value bypass (verified by reading the comparison logic)?
+    assertions:
+      - type: must_cover_section
+        value: "§6 Architectural Guardrails — Security"
+      - type: must_cite_repo_evidence
+        value: "the empty/falsy-value bypass determination is backed by a reference to the actual comparison logic read, not an assumption"
+      - type: must_identify_pattern
+        value: "identifies match-based confirmation/safety gates as a distinct guardrail category, not folded silently into generic auth/authz bullets"
+    scoring:
+      method: rubric
+      weight: 1.0
+      pass_criteria: "Every match-based safety gate relevant to the target files is documented with an explicit empty/falsy-bypass determination backed by evidence."
+    pass_threshold: 85
+
+  - id: EVAL-RA-004
+    round: 3
+    stage: repo-assessment
+    source_issue_ids: [R3-ISSUE-001]
+    input_refs:
+      - eval-generation/eval-generation-workflow/outputs/epic-bug-analysis/rca-summary.md
+      - eval-generation/eval-generation-workflow/template-gaps/repo-assessment-gaps.md
+    prompt: >-
+      Given a feature spec that describes a migration, upgrade, or removal of a deprecated
+      pattern/API/dependency across the codebase, does the generated repo-assessment.md's
+      §11.0b Migration Surface Inventory enumerate EVERY current repo-wide usage of the old
+      pattern being migrated away from — not just the usages the source ticket happened to
+      mention — so a partial migration cannot pass unnoticed?
+    assertions:
+      - type: must_cover_section
+        value: "§11.0b Migration Surface Inventory"
+      - type: must_cite_repo_evidence
+        value: "each listed old-pattern usage is backed by an actual file/line reference, not an assumed or partial list"
+      - type: must_identify_pattern
+        value: "does not silently limit the inventory to only the files named in the ticket when a repo-wide search would surface more"
+    scoring:
+      method: rubric
+      weight: 1.0
+      pass_criteria: "The migration surface inventory is complete and evidence-backed; omitting a discoverable old-pattern usage fails this check."
+    pass_threshold: 85
