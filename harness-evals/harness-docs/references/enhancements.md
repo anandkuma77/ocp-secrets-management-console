@@ -20,7 +20,7 @@ Catalog of design documentation related to this component.
 
 ## OpenShift Enhancements
 
-No component-specific enhancement proposals found in `openshift/enhancements`. This component is a Console plugin, not a platform operator — design decisions are tracked as ADRs in `ai-docs/decisions/`.
+No component-specific enhancement proposals found in `openshift/enhancements`. This component is a Console plugin, not a platform operator — design decisions are tracked as ADRs in `harness-evals/harness-docs/decisions/`.
 
 ## See Also
 

@@ -180,8 +180,8 @@ scripts/deploy-via-bundle.sh
 
 - [Testing Guide](./SM_TESTING.md)
 - [Architecture](./architecture/components.md)
-- [Security Guidelines](../docs/security-guidelines.md)
-- [Performance Guidelines](../docs/performance-guidelines.md)
-- [Error Handling Guidelines](../docs/error-handling-guidelines.md)
-- [API Contracts Guidelines](../docs/api-contracts-guidelines.md)
-- [Integration Guidelines](../docs/integration-guidelines.md)
+- [Security Guidelines](./guidelines/security-guidelines.md)
+- [Performance Guidelines](./guidelines/performance-guidelines.md)
+- [Error Handling Guidelines](./guidelines/error-handling-guidelines.md)
+- [API Contracts Guidelines](./guidelines/api-contracts-guidelines.md)
+- [Integration Guidelines](./guidelines/integration-guidelines.md)

@@ -185,4 +185,4 @@ Cypress config exists at `integration-tests/cypress.config.js` — being replace
 
 - [Development Guide](./SM_DEVELOPMENT.md)
 - [Architecture](./architecture/components.md)
-- [Testing Guidelines](../docs/testing-guidelines.md) — full mock patterns, E2E conventions, new feature checklist
+- [Testing Guidelines](./guidelines/testing-guidelines.md) — full mock patterns, E2E conventions, new feature checklist

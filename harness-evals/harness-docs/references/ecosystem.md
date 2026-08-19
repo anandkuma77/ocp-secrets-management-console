@@ -49,7 +49,7 @@ This document links to generic OpenShift/Kubernetes patterns in the Platform eco
 
 **Location**: [ai-docs/decisions/](https://github.com/openshift/enhancements/tree/master/ai-docs/decisions)
 
-**Component-Specific ADRs**: See `ai-docs/decisions/` for component decisions.
+**Component-Specific ADRs**: See `harness-evals/harness-docs/decisions/` for component decisions.
 
 ---
 
