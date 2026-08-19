@@ -12,12 +12,12 @@ reviews:
       - "AGENTS.md"
     code_guidelines:
       filePatterns:
-        - "docs/security-guidelines.md"
-        - "docs/performance-guidelines.md"
-        - "docs/error-handling-guidelines.md"
-        - "docs/api-contracts-guidelines.md"
-        - "docs/testing-guidelines.md"
-        - "docs/integration-guidelines.md"
+        - "harness-evals/harness-docs/guidelines/security-guidelines.md"
+        - "harness-evals/harness-docs/guidelines/performance-guidelines.md"
+        - "harness-evals/harness-docs/guidelines/error-handling-guidelines.md"
+        - "harness-evals/harness-docs/guidelines/api-contracts-guidelines.md"
+        - "harness-evals/harness-docs/guidelines/testing-guidelines.md"
+        - "harness-evals/harness-docs/guidelines/integration-guidelines.md"
   path_filters:
     - "!vendor/**"
     - "!yarn.lock"

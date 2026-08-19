@@ -4,6 +4,8 @@
 **Repository**: openshift/ocp-secrets-management-console  
 **Stack**: React 18 + TypeScript 5 + PatternFly 6 + Console Dynamic Plugin SDK  
 
+> **For AI Agents**: Start with `harness-evals/harness-docs/domain/` to understand the CRD types this plugin displays, then read `harness-evals/harness-docs/architecture/components.md` for plugin internals and data flow. Check `harness-evals/harness-docs/decisions/` for architectural constraints before proposing changes. Use `harness-evals/harness-docs/SM_DEVELOPMENT.md` for common tasks.
+>
 > **Generic Platform Patterns**: See Platform documentation (openshift/enhancements/ai-docs/) for operator patterns, testing practices, security guidelines, and cross-repo ADRs.
 
 ## What is Secrets Management Console?
@@ -40,11 +42,13 @@ OpenShift Console dynamic plugin providing a unified dashboard for viewing and i
 ## Documentation Structure
 
 ```text
-ai-docs/
+harness-evals/harness-docs/
 ├── domain/                           # CRD types: cert-manager, ESO, SSCSID, trust-manager
-├── architecture/components.md        # Plugin internals, data flow, extension points
+├── architecture/
+│   └── components.md                 # Plugin internals, data flow, extension points
 ├── decisions/                        # Component ADRs (2 accepted + template)
 ├── exec-plans/                       # Feature planning
+├── guidelines/                       # Security, performance, error-handling, API-contracts, testing, integration conventions
 ├── references/
 │   ├── ecosystem.md                  # Platform links
 │   └── enhancements.md               # Design docs + upstream project versions
@@ -54,22 +58,24 @@ ai-docs/
 
 ## Deep-Dive Guidelines
 
-Domain-specific rules and conventions in `docs/`:
+Domain-specific rules and conventions in `harness-evals/harness-docs/guidelines/`:
 
 | Guideline | Scope |
 |-----------|-------|
-| [Security](docs/security-guidelines.md) | Auth/authz, RBAC tiers, delete confirmation, sensitive data masking, container security, supply chain |
-| [Performance](docs/performance-guidelines.md) | WebSocket watch budget (~13 watches), conditional rendering gates, pagination, operator detection sequencing |
-| [Error Handling](docs/error-handling-guidelines.md) | useK8sWatchResource tuple, ResourceTable tri-state, operator detection 404 vs errors, delete error flow, ResourceInspect error cascade |
-| [API Contracts](docs/api-contracts-guidelines.md) | CRD model shape, operator/CRD groups, TypeScript interface conventions, K8s API access patterns, URL routing |
-| [Testing](docs/testing-guidelines.md) | Test layers, `data-test` convention, coverage thresholds, mock patterns, E2E conventions, new feature checklist |
-| [Integration](docs/integration-guidelines.md) | Console plugin registration, SDK usage, operator detection, CRD version pinning, adding new operator/CRD checklists |
+| [Security](harness-evals/harness-docs/guidelines/security-guidelines.md) | Auth/authz, RBAC tiers, delete confirmation, sensitive data masking, container security, supply chain |
+| [Performance](harness-evals/harness-docs/guidelines/performance-guidelines.md) | WebSocket watch budget (~13 watches), conditional rendering gates, pagination, operator detection sequencing |
+| [Error Handling](harness-evals/harness-docs/guidelines/error-handling-guidelines.md) | useK8sWatchResource tuple, ResourceTable tri-state, operator detection 404 vs errors, delete error flow, ResourceInspect error cascade |
+| [API Contracts](harness-evals/harness-docs/guidelines/api-contracts-guidelines.md) | CRD model shape, operator/CRD groups, TypeScript interface conventions, K8s API access patterns, URL routing |
+| [Testing](harness-evals/harness-docs/guidelines/testing-guidelines.md) | Test layers, `data-test` convention, coverage thresholds, mock patterns, E2E conventions, new feature checklist |
+| [Integration](harness-evals/harness-docs/guidelines/integration-guidelines.md) | Console plugin registration, SDK usage, operator detection, CRD version pinning, adding new operator/CRD checklists |
 
 **Before opening a PR**: `make update` then `make verify`
 
 **Testing**: `make plugin-test` (unit) | `make test-e2e-premerge` (mock E2E) | `make test-e2e` (live cluster E2E)
 
-**AI Agent Path**: domain/ → architecture/ → decisions/ → SM_DEVELOPMENT.md
+**Retrieval Strategy**: For implementation tasks, always check `harness-evals/harness-docs/architecture/components.md` for verified patterns. For CRD/type questions, see `harness-evals/harness-docs/domain/`. For "why" questions, see `harness-evals/harness-docs/decisions/`.
+
+**AI Agent Path**: `harness-evals/harness-docs/domain/` → `harness-evals/harness-docs/architecture/` → `harness-evals/harness-docs/decisions/` → `harness-evals/harness-docs/SM_DEVELOPMENT.md`
 
 ## External References
 
