@@ -1,0 +1,234 @@
+# Feature Bundle Input — Provide all links and content for one eval-loop round
+#
+# Round 3 — ocp-secrets-management-console
+# SMC-9: Migrate PatternFly components from v5 to v6.
+# Headline finding: the ticket's acceptance criterion ("Project is moved to pattern-fly 6")
+# has no verifiable completion definition. The PR that closed it left exactly one component
+# (DeleteConfirmationModal.tsx) on the deprecated v5-compatible `@patternfly/react-core/deprecated`
+# Modal import instead of the real v6 composed Modal API. CodeRabbit correctly flagged this as
+# "Major" severity with a concrete fix, the author reacted 👍 (acknowledging it) but never
+# implemented the fix, and it merged anyway with a bare "/lgtm" — the exact
+# unresolved-automated-review-finding pattern from round 2 (SMC-8), now observed a second time
+# with a different author/reviewer pairing on a different kind of defect (incomplete migration,
+# not a security bypass). Verified still present in current HEAD.
+#
+# A SECOND Major finding in the same PR (ResourceTable.tsx EmptyState using a nested <Title>
+# instead of a plain titleText string, icon rendered as a child instead of via the icon prop)
+# was also left unresolved at merge, and had to be fixed 26 days later in an unrelated-looking
+# follow-up commit (4fcce2b, by the same reviewer who approved the original PR) — direct proof
+# that ignoring automated review findings at merge time creates real downstream rework, not just
+# theoretical risk.
+
+feature_name: "Migrate PatternFly React components from v5 to v6 API"
+epic_key: "SMC-9"
+target_repo: "https://github.com/openshift/ocp-secrets-management-console"
+
+# --- Required Inputs ---
+
+enhancement_proposal: |
+  No formal Enhancement Proposal / ARD exists. Per this repo's convention (Console
+  plugin, not a platform operator — see harness-evals/harness-docs/references/enhancements.md),
+  design decisions are tracked as Jira stories + component ADRs, not openshift/enhancements
+  proposals. No EP/ARD content applies to this bundle.
+
+jira_epic: |
+  SMC-9 — https://redhat.atlassian.net/browse/SMC-9 (standalone Jira story, no parent epic)
+
+  What
+  Migrate the Project from PatternFly 5 to PatternFly 6.
+
+  Why
+  PatternFly 6 is the new standard.
+
+  Acceptance Criteria
+  Project is moved to pattern-fly 6.
+
+  NOTE: this is the entire ticket verbatim. There is no per-component checklist, no explicit
+  "no deprecated/legacy imports remain" completion gate, and no distinction between "compiles
+  against v6" and "fully adopts v6 composed APIs" — see repo_prs below for why that
+  distinction mattered in practice.
+
+repo_state: |
+  Pre-feature (parent of the merge commit):
+    commit 56e1e107e74224a9c13878503d053bcedda2e7a9 (2026-04-23)
+    "Merge pull request #11 from shiftweek/feature/hide-uninstalled-operator-ui"
+    - PatternFly v6 (`@patternfly/react-core: ^6.2.2`) was already the installed dependency,
+      but ~11 component files still used v5-era JSX patterns (nested <Title> children instead
+      of titleText props, icons as EmptyState/MenuToggle children instead of icon props, v5 CSS
+      custom properties like --pf-global--danger-color--100, Modal imported from the main
+      package instead of composed sub-components).
+
+  Post-feature (merge commit):
+    commit b26d1658c8fa9902758d039b049ae38b98f64848 (2026-04-24)
+    "Merge pull request #12 from anandkuma77/patternfly-v6-migration"
+    (squashed to a single commit, 60d7f45f26669833cb0926c5414f1d07d7de7abd, on merge)
+
+user_stories: |
+  - id: SMC-9
+    title: Migrate PatternFly React components from v5 to v6
+    description: >
+      See jira_epic SMC-9 section above (full text, verbatim — the ticket is only 3 lines:
+      What/Why/Acceptance Criteria, with the AC simply restating the What).
+    acceptance_criteria:
+      - Project is moved to pattern-fly 6 (as written — no per-file/component enumeration,
+        no automated "no v5 patterns remain" check specified).
+
+repo_prs: |
+  ==========================================================================
+  PR #12 — https://github.com/openshift/ocp-secrets-management-console/pull/12
+  "Migrate PatternFly components from v5 to v6"
+  Author: anandkuma77 | Branch: patternfly-v6-migration -> main
+  Merged: 2026-04-24 by sarthakpurohit ("/lgtm", 1 check passed)
+  Merge commit: b26d1658c8fa9902758d039b049ae38b98f64848 | Jira: https://redhat.atlassian.net/browse/SMC-9
+  Squashed commit: 60d7f45f26669833cb0926c5414f1d07d7de7abd "feat: Complete PatternFly v5 to v6 migration"
+  (2 review rounds happened against intermediate commits 206821f, 691bf65, before squashing to
+  60d7f45 — 11 files changed, +37/-39)
+  ==========================================================================
+  Files changed (11): src/ResourceInspect.tsx, src/SecretsManagement.tsx,
+    src/components/CertificatesTable.tsx, src/components/DeleteConfirmationModal.tsx,
+    src/components/ExternalSecretsTable.tsx, src/components/IssuersTable.tsx,
+    src/components/OperatorNotInstalled.tsx, src/components/PushSecretsTable.tsx,
+    src/components/ResourceTable.tsx, src/components/SecretProviderClassTable.tsx,
+    src/components/SecretStoresTable.tsx
+
+  PR description (as posted): "This PR migrates all PatternFly React components from v5 to
+  v6 API, updating component props and patterns to align with the latest PatternFly design
+  system. ... PatternFly v5 patterns are deprecated and will be removed in future releases.
+  This migration prevents breaking changes down the road."
+
+  ### Finding 1 — DeleteConfirmationModal.tsx: migrated to the DEPRECATED v6 shim, not real v6
+
+  Diff actually shipped (squashed commit 60d7f45):
+  ```diff
+   import * as React from 'react';
+   import { useTranslation } from 'react-i18next';
+  -import {
+  -  Modal,
+  -  ModalVariant,
+  -  Button,
+  -  Alert,
+  -  AlertVariant,
+  -  TextInput,
+  -} from '@patternfly/react-core';
+  +import { Button, Alert, AlertVariant, TextInput } from '@patternfly/react-core';
+  +import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';
+  ```
+  This "fix" makes the v5-shaped `Modal`/`ModalVariant` API keep compiling against the
+  installed v6 package by pointing it at PatternFly v6's own backward-compatibility shim
+  (`@patternfly/react-core/deprecated`) — it does NOT adopt the v6 composed Modal API
+  (`Modal` + `ModalHeader` + `ModalBody` + `ModalFooter`, `variant="small"` as a string).
+
+  ### CodeRabbit automated review (Run ID 24a5984b, on the first reviewed commit range,
+  BEFORE the final squash/merge)
+
+  Actionable comment (severity: 🟠 Major), on `DeleteConfirmationModal.tsx` lines 9-12:
+
+  > **Migrate to PatternFly v6 Modal API instead of using deprecated imports.**
+  > This PR aims to migrate to v6 patterns, but this file imports and uses the deprecated
+  > monolithic `Modal` from `@patternfly/react-core/deprecated`. In v6, the supported Modal
+  > API uses composition with `Modal`, `ModalHeader`, `ModalBody`, and `ModalFooter`... Migrate
+  > fully to avoid revisiting this file when the deprecated import path is removed.
+  >
+  > (full composed-API diff suggestion provided, including ModalHeader/ModalBody/ModalFooter
+  > and `variant="small"` as a string literal)
+
+  Human response: `anandkuma77` (the PR author) reacted 👍 to this comment (acknowledging it),
+  but the suggested fix was never implemented in any subsequent commit. `sarthakpurohit`
+  commented a bare `/lgtm` and merged. **Verified against current HEAD:**
+  `src/components/DeleteConfirmationModal.tsx` line 4 today still reads
+  `import { Modal, ModalVariant } from '@patternfly/react-core/deprecated';` — this is also
+  currently the ONLY file in the entire `src/` tree still importing from
+  `@patternfly/react-core/deprecated` (confirmed via repo-wide search), meaning this ticket's
+  binary acceptance criterion ("Project is moved to pattern-fly 6") is not actually fully true:
+  one component was moved to a *compatibility shim for* v6, not to the v6 API itself, and no
+  one has revisited it since (Apr 24, 2026 through current HEAD).
+
+  ### Finding 2 — ResourceTable.tsx: EmptyState migration left incomplete at merge, fixed
+  26 days later in a follow-up commit
+
+  Diff shipped in 60d7f45 (still incomplete v5/v6 hybrid):
+  ```diff
+  -        <EmptyState>
+  +        <EmptyState
+  +          titleText={
+  +            <Title size="lg" headingLevel="h4">
+  +              {emptyStateTitle || t('No resources found')}
+  +            </Title>
+  +          }
+  +        >
+             <SearchIcon className="co-m-empty-state__icon" />
+  -          <Title size="lg" headingLevel="h4">
+  -            {emptyStateTitle || t('No resources found')}
+  -          </Title>
+             <EmptyStateBody>{emptyStateBody ?? defaultEmptyStateBody}</EmptyStateBody>
+           </EmptyState>
+  ```
+  CodeRabbit's SECOND review (Run ID 0e5f8513, on the range 691bf65..60d7f45, i.e. reviewing
+  the very commit that got squashed and merged) flagged (🟠 Major):
+
+  > **Incomplete PatternFly v6 migration — pass `titleText` as a string, hoist `headingLevel`,
+  > and move `SearchIcon` to the `icon` prop.** Two deviations from the v6 pattern used
+  > elsewhere in this PR (e.g. `src/components/OperatorNotInstalled.tsx`): `titleText` is
+  > being passed a nested `<Title>` element — this reintroduces the exact v5 nesting this PR
+  > is migrating away from. `SearchIcon` is still rendered as a child instead of via the
+  > `icon` prop. Full fix diff provided.
+
+  This finding was posted the same day as merge (Apr 24) and was likewise never addressed
+  before `sarthakpurohit` commented `/lgtm` and merged. It sat unresolved in production code
+  for 26 days until commit `4fcce2b140cbada1979425d7b452cfc7730286b0` (2026-05-20,
+  "fix: Use PatternFly EmptyState pattern for table empty states", authored by
+  `sarthakpurohit` — the SAME person who approved the original PR — with
+  `Co-authored-by: Cursor <cursoragent@cursor.com>`), which applied almost exactly the fix
+  CodeRabbit had already proposed: icon via the `icon` prop, `titleText` as a plain string,
+  no `Title` wrapper. This is direct, dated evidence that an ignored Major-severity finding
+  is not just a theoretical risk — it became real, scheduled rework a month later, done by
+  the reviewer who let it merge.
+
+  ### Other CodeRabbit findings (Minor severity, Prettier/formatting only — not used as the
+  primary eval signal, but noted for completeness): multi-line import formatting in
+  DeleteConfirmationModal.tsx, missing aria-label on an icon-only back button in
+  ResourceInspect.tsx, inline style object formatting in SecretsManagement.tsx.
+
+bugs:
+  - key: "N/A (flagged by CodeRabbit pre-merge as 'Actionable/Major', acknowledged with a 👍 reaction, never fixed — still live in HEAD)"
+    summary: >
+      SMC-9's acceptance criterion ("Project is moved to pattern-fly 6") is not fully met:
+      `src/components/DeleteConfirmationModal.tsx` still imports `Modal`/`ModalVariant` from
+      `@patternfly/react-core/deprecated` — PatternFly v6's own backward-compatibility shim
+      for the pre-v6 monolithic Modal API — rather than the real v6 composed Modal API
+      (`Modal`/`ModalHeader`/`ModalBody`/`ModalFooter`). It is the only file in `src/` still
+      on this deprecated import path, and remains so as of current HEAD.
+    root_cause: >
+      The "migration" ticket's acceptance criterion was a single unverifiable sentence
+      ("Project is moved to pattern-fly 6") with no per-component checklist and no automated
+      completion gate (e.g., a lint rule or grep check banning
+      `@patternfly/react-core/deprecated` imports repo-wide). The implementer took the path of
+      least resistance for one file — re-pointing the deprecated-shaped import at PatternFly
+      v6's own deprecated re-export, which compiles cleanly and looks superficially "migrated"
+      — rather than adopting the composed v6 API. CodeRabbit caught this exact gap with a
+      Major-severity finding and a complete proposed fix; the author acknowledged it (👍) but
+      never pushed a fix commit, and the human reviewer merged on a bare `/lgtm` without
+      checking whether the actionable comment had been resolved.
+    fix_pr: "None — unresolved. CodeRabbit's suggested composed-Modal-API fix was never applied."
+    affected_stage: "code-generation"
+  - key: "N/A (flagged by CodeRabbit pre-merge as 'Actionable/Major' on the exact commit that was merged, fixed 26 days later in commit 4fcce2b)"
+    summary: >
+      `src/components/ResourceTable.tsx`'s shared EmptyState (used by every resource table:
+      CertificatesTable, ExternalSecretsTable, IssuersTable, PushSecretsTable,
+      SecretProviderClassTable, SecretStoresTable, BundlesTable) shipped with an incomplete
+      v6 migration: `titleText` was passed a nested `<Title>` element (reintroducing the v5
+      pattern) and `SearchIcon` was still rendered as a JSX child instead of via the `icon`
+      prop, inconsistent with the correct pattern already used in `OperatorNotInstalled.tsx`
+      in the very same PR.
+    root_cause: >
+      Same class of gap as the primary bug above (no verifiable per-component completion
+      check for the migration), but this instance WAS eventually fixed — just not in the PR
+      that CodeRabbit reviewed it in. It shipped to `main` unresolved on 2026-04-24 and was
+      only corrected on 2026-05-20 (commit 4fcce2b, "fix: Use PatternFly EmptyState pattern
+      for table empty states") by the same reviewer (`sarthakpurohit`) who had approved the
+      original PR with a bare `/lgtm`. This demonstrates the round-2 "unresolved automated
+      review finding" pattern is not a one-off: a second, independent Major finding in a
+      different PR, reviewed by the same person, was also merged unresolved and had to be
+      fixed later as separate, unplanned work.
+    fix_pr: "https://github.com/openshift/ocp-secrets-management-console/commit/4fcce2b140cbada1979425d7b452cfc7730286b0 (26 days after the original merge)"
+    affected_stage: "code-generation"
