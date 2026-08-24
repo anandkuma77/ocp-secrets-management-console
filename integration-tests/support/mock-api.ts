@@ -3,6 +3,7 @@ import type { Page, Route } from '@playwright/test';
 const CRD_BASE = '/api/kubernetes/apis/apiextensions.k8s.io/v1/customresourcedefinitions';
 
 const CERT_MANAGER_CRDS = ['certificates.cert-manager.io', 'issuers.cert-manager.io'];
+const TRUST_MANAGER_CRDS = ['bundles.trust.cert-manager.io'];
 const EXTERNAL_SECRETS_CRDS = [
   'externalsecrets.external-secrets.io',
   'secretstores.external-secrets.io',
@@ -19,6 +20,7 @@ function crdResponse(crdName: string) {
 
 export interface MockOperatorOptions {
   certManager?: boolean;
+  trustManager?: boolean;
   externalSecrets?: boolean;
   secretsStoreCSI?: boolean;
 }
@@ -31,10 +33,11 @@ export async function mockOperatorDetection(
   page: Page,
   opts: MockOperatorOptions = {},
 ): Promise<void> {
-  const { certManager = false, externalSecrets = false, secretsStoreCSI = false } = opts;
+  const { certManager = false, trustManager = false, externalSecrets = false, secretsStoreCSI = false } = opts;
 
   const routes: [string[], boolean][] = [
     [CERT_MANAGER_CRDS, certManager],
+    [TRUST_MANAGER_CRDS, trustManager],
     [EXTERNAL_SECRETS_CRDS, externalSecrets],
     [SECRETS_STORE_CSI_CRDS, secretsStoreCSI],
   ];
