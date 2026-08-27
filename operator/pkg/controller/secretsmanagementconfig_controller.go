@@ -40,6 +40,25 @@ const (
 	PluginPort = 9443
 )
 
+var esoGeneratorResources = []string{
+	"acraccesstokens",
+	"cloudsmithaccesstokens",
+	"clustergenerators",
+	"ecrauthorizationtokens",
+	"fakes",
+	"gcraccesstokens",
+	"githubaccesstokens",
+	"grafanas",
+	"mfas",
+	"passwords",
+	"quayaccesstokens",
+	"sshkeys",
+	"stssessiontokens",
+	"uuids",
+	"vaultdynamicsecrets",
+	"webhooks",
+}
+
 var (
 	// DefaultPluginImage is the default image for the plugin.
 	// In production (OLM), this is set via RELATED_IMAGE_PLUGIN environment variable from the bundle CSV.
@@ -95,6 +114,7 @@ type SecretsManagementConfigReconciler struct {
 // Permissions for cert-manager / external-secrets / secrets-store-csi so the operator can create ClusterRoles that grant these to the plugin (RBAC escalation rule; use * so we can grant * to admin role)
 // +kubebuilder:rbac:groups=cert-manager.io,resources=certificates;issuers;clusterissuers,verbs=*
 // +kubebuilder:rbac:groups=external-secrets.io,resources=externalsecrets;secretstores;clustersecretstores;clusterexternalsecrets;pushsecrets;clusterpushsecrets,verbs=*
+// +kubebuilder:rbac:groups=generators.external-secrets.io,resources=acraccesstokens;cloudsmithaccesstokens;clustergenerators;ecrauthorizationtokens;fakes;gcraccesstokens;githubaccesstokens;grafanas;mfas;passwords;quayaccesstokens;sshkeys;stssessiontokens;uuids;vaultdynamicsecrets;webhooks,verbs=*
 // +kubebuilder:rbac:groups=secrets-store.csi.x-k8s.io,resources=secretproviderclasses;secretproviderclasspodstatuses,verbs=*
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 // +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=get;list;watch;create;update;patch;delete
@@ -322,6 +342,11 @@ func (r *SecretsManagementConfigReconciler) buildViewClusterRole(prefix string) 
 				Verbs:     []string{"get", "list", "watch"},
 			},
 			{
+				APIGroups: []string{"generators.external-secrets.io"},
+				Resources: esoGeneratorResources,
+				Verbs:     []string{"get", "list", "watch"},
+			},
+			{
 				APIGroups: []string{"secrets-store.csi.x-k8s.io"},
 				Resources: []string{"secretproviderclasses", "secretproviderclasspodstatuses"},
 				Verbs:     []string{"get", "list", "watch"},
@@ -352,6 +377,11 @@ func (r *SecretsManagementConfigReconciler) buildDeleteClusterRole(prefix string
 				Verbs:     []string{"delete"},
 			},
 			{
+				APIGroups: []string{"generators.external-secrets.io"},
+				Resources: esoGeneratorResources,
+				Verbs:     []string{"delete"},
+			},
+			{
 				APIGroups: []string{"secrets-store.csi.x-k8s.io"},
 				Resources: []string{"secretproviderclasses"},
 				Verbs:     []string{"delete"},
@@ -379,6 +409,11 @@ func (r *SecretsManagementConfigReconciler) buildAdminClusterRole(prefix string)
 			{
 				APIGroups: []string{"external-secrets.io"},
 				Resources: []string{"externalsecrets", "clusterexternalsecrets", "secretstores", "clustersecretstores", "pushsecrets"},
+				Verbs:     []string{"*"},
+			},
+			{
+				APIGroups: []string{"generators.external-secrets.io"},
+				Resources: esoGeneratorResources,
 				Verbs:     []string{"*"},
 			},
 			{

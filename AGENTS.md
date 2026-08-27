@@ -16,19 +16,20 @@ OpenShift Console dynamic plugin providing a unified dashboard for viewing and i
 
 | Component | Role | Source |
 |-----------|------|--------|
-| `SecretsManagement` | Main dashboard: operator/resource/project filters + 7 resource tables | `src/SecretsManagement.tsx` |
+| `SecretsManagement` | Main dashboard: operator/resource/project filters + 8 resource tables | `src/SecretsManagement.tsx` |
 | `ResourceInspect` | Detail view: metadata, spec YAML, status, events, pod statuses | `src/ResourceInspect.tsx` |
 | `useOperatorDetection` | CRD-existence check hook — drives conditional rendering | `src/hooks/useOperatorDetection.ts` |
 | `ResourceTable` | Reusable paginated table with loading/error/empty states | `src/components/ResourceTable.tsx` |
 | `crds/*` | CRD model definitions + TypeScript interfaces (13 kinds, 4 operators) | `src/components/crds/` |
 
-## Operators & CRDs (13 kinds)
+## Operators & CRDs (29 kinds)
 
 | Operator | Kinds | API Group |
 |----------|-------|-----------|
 | cert-manager (v1.19.2) | Certificate, Issuer, ClusterIssuer, CertificateRequest | `cert-manager.io/v1` |
 | trust-manager (v0.20.3) | Bundle | `trust.cert-manager.io/v1alpha1` |
 | ESO (v0.20.4) | ExternalSecret, ClusterExternalSecret, SecretStore, ClusterSecretStore, PushSecret, ClusterPushSecret | `external-secrets.io/v1` / `v1alpha1` |
+| ESO generators (v0.20.4) | ClusterGenerator plus 15 namespaced generator kinds (Password, UUID, Fake, Webhook, SSHKey, MFA, Grafana, ACRAccessToken, CloudsmithAccessToken, ECRAuthorizationToken, GCRAccessToken, GithubAccessToken, QuayAccessToken, STSSessionToken, VaultDynamicSecret) | `generators.external-secrets.io/v1alpha1` |
 | SSCSID (v1.4.0) | SecretProviderClass, SecretProviderClassPodStatus | `secrets-store.csi.x-k8s.io/v1` |
 
 ## Critical Patterns

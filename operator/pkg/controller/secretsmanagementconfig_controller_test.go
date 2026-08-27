@@ -398,7 +398,7 @@ func TestBuildViewClusterRole(t *testing.T) {
 	role := r.buildViewClusterRole("test-prefix")
 
 	assert.Equal(t, "test-prefix-view", role.Name)
-	assert.Len(t, role.Rules, 3)
+	assert.Len(t, role.Rules, 4)
 
 	// Check cert-manager rules
 	assert.Equal(t, []string{"cert-manager.io"}, role.Rules[0].APIGroups)
@@ -410,8 +410,13 @@ func TestBuildViewClusterRole(t *testing.T) {
 	// Check external-secrets rules
 	assert.Equal(t, []string{"external-secrets.io"}, role.Rules[1].APIGroups)
 
+	// Check generator rules
+	assert.Equal(t, []string{"generators.external-secrets.io"}, role.Rules[2].APIGroups)
+	assert.Contains(t, role.Rules[2].Resources, "passwords")
+	assert.Contains(t, role.Rules[2].Resources, "clustergenerators")
+
 	// Check secrets-store-csi rules
-	assert.Equal(t, []string{"secrets-store.csi.x-k8s.io"}, role.Rules[2].APIGroups)
+	assert.Equal(t, []string{"secrets-store.csi.x-k8s.io"}, role.Rules[3].APIGroups)
 }
 
 func TestBuildDeleteClusterRole(t *testing.T) {

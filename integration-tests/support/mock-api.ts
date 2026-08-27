@@ -95,6 +95,41 @@ export async function mockK8sResourceList(
   );
 }
 
+export const GENERATOR_PLURALS = [
+  'acraccesstokens',
+  'cloudsmithaccesstokens',
+  'clustergenerators',
+  'ecrauthorizationtokens',
+  'fakes',
+  'gcraccesstokens',
+  'githubaccesstokens',
+  'grafanas',
+  'mfas',
+  'passwords',
+  'quayaccesstokens',
+  'sshkeys',
+  'stssessiontokens',
+  'uuids',
+  'vaultdynamicsecrets',
+  'webhooks',
+] as const;
+
+/** Mock all ESO generator list endpoints. Unspecified kinds default to empty. */
+export async function mockGeneratorLists(
+  page: Page,
+  itemsByPlural: Partial<Record<(typeof GENERATOR_PLURALS)[number], unknown[]>> = {},
+): Promise<void> {
+  for (const plural of GENERATOR_PLURALS) {
+    await mockK8sResourceList(
+      page,
+      'generators.external-secrets.io',
+      'v1alpha1',
+      plural,
+      itemsByPlural[plural] ?? [],
+    );
+  }
+}
+
 export async function mockNamespaces(page: Page, namespaces: string[]): Promise<void> {
   const items = namespaces.map((ns) => ({
     metadata: { name: ns },

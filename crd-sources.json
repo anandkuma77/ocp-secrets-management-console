@@ -86,6 +86,102 @@
           "kind": "ClusterPushSecret",
           "group": "external-secrets.io",
           "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_acraccesstokens.yaml",
+          "kind": "ACRAccessToken",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_cloudsmithaccesstokens.yaml",
+          "kind": "CloudsmithAccessToken",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_clustergenerators.yaml",
+          "kind": "ClusterGenerator",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_ecrauthorizationtokens.yaml",
+          "kind": "ECRAuthorizationToken",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_fakes.yaml",
+          "kind": "Fake",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_gcraccesstokens.yaml",
+          "kind": "GCRAccessToken",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_githubaccesstokens.yaml",
+          "kind": "GithubAccessToken",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_grafanas.yaml",
+          "kind": "Grafana",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_mfas.yaml",
+          "kind": "MFA",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_passwords.yaml",
+          "kind": "Password",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_quayaccesstokens.yaml",
+          "kind": "QuayAccessToken",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_sshkeys.yaml",
+          "kind": "SSHKey",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_stssessiontokens.yaml",
+          "kind": "STSSessionToken",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_uuids.yaml",
+          "kind": "UUID",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_vaultdynamicsecrets.yaml",
+          "kind": "VaultDynamicSecret",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
+        },
+        {
+          "file": "config/crds/bases/generators.external-secrets.io_webhooks.yaml",
+          "kind": "Webhook",
+          "group": "generators.external-secrets.io",
+          "version": "v1alpha1"
         }
       ]
     },

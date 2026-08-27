@@ -3,6 +3,7 @@ export * from './Bundle';
 export * from './Certificate';
 export * from './Events';
 export * from './ExternalSecret';
+export * from './Generator';
 export * from './Issuer';
 export * from './PushSecret';
 export * from './SecretProviderClass';

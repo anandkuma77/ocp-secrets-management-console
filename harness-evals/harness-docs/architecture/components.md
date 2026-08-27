@@ -31,6 +31,7 @@ src/
 │   ├── ExternalSecretsTable.tsx   # ESO ExternalSecrets + ClusterExternalSecrets
 │   ├── SecretStoresTable.tsx      # ESO SecretStores + ClusterSecretStores
 │   ├── PushSecretsTable.tsx       # ESO PushSecrets + ClusterPushSecrets
+│   ├── GeneratorsTable.tsx        # ESO generators + ClusterGenerator
 │   └── SecretProviderClassTable.tsx # SSCSID SecretProviderClasses
 │   └── crds/                      # CRD model definitions + TypeScript interfaces
 │       ├── index.ts               # Re-exports, union types, type guards
@@ -40,6 +41,7 @@ src/
 │       ├── ExternalSecret.ts      # ExternalSecretModel, ClusterExternalSecretModel
 │       ├── SecretStore.ts         # SecretStoreModel, ClusterSecretStoreModel
 │       ├── PushSecret.ts          # PushSecretModel, ClusterPushSecretModel
+│       ├── Generator.ts           # generator kind defs, ClusterGeneratorModel
 │       ├── SecretProviderClass.ts # SecretProviderClassModel, SecretProviderClassPodStatusModel
 │       └── Events.ts              # EventModel, K8sEvent, getInvolvedObjectKind()
 ├── hooks/

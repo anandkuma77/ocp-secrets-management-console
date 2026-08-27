@@ -1,3 +1,5 @@
+import { GENERATOR_KIND_DEFS } from './Generator';
+
 // Core v1 Event for listing resource events
 export const EventModel = { group: '', version: 'v1', kind: 'Event' };
 export interface K8sEvent {
@@ -26,5 +28,8 @@ export const getInvolvedObjectKind = (rt: string): string => {
     secretproviderclasses: 'SecretProviderClass',
     bundles: 'Bundle',
   };
+  for (const def of GENERATOR_KIND_DEFS) {
+    map[def.plural] = def.kind;
+  }
   return map[rt] || rt;
 };
