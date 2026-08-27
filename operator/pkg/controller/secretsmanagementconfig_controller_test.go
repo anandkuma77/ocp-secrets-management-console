@@ -117,19 +117,24 @@ func TestReconcileRBAC_CreatesRoles(t *testing.T) {
 	err = r.Get(ctx, types.NamespacedName{Name: "secrets-management-view"}, viewRole)
 	require.NoError(t, err)
 	assert.Equal(t, "secrets-management-view", viewRole.Name)
-	assert.Len(t, viewRole.Rules, 3) // cert-manager, external-secrets, secrets-store-csi
+	assert.Len(t, viewRole.Rules, 4) // cert-manager, external-secrets, generators, secrets-store-csi
+	assert.Equal(t, []string{"generators.external-secrets.io"}, viewRole.Rules[2].APIGroups)
 
 	// Verify delete role was created
 	deleteRole := &rbacv1.ClusterRole{}
 	err = r.Get(ctx, types.NamespacedName{Name: "secrets-management-delete"}, deleteRole)
 	require.NoError(t, err)
 	assert.Equal(t, "secrets-management-delete", deleteRole.Name)
+	assert.Len(t, deleteRole.Rules, 4)
+	assert.Equal(t, []string{"generators.external-secrets.io"}, deleteRole.Rules[2].APIGroups)
 
 	// Verify admin role was created
 	adminRole := &rbacv1.ClusterRole{}
 	err = r.Get(ctx, types.NamespacedName{Name: "secrets-management-admin"}, adminRole)
 	require.NoError(t, err)
 	assert.Equal(t, "secrets-management-admin", adminRole.Name)
+	assert.Len(t, adminRole.Rules, 4)
+	assert.Equal(t, []string{"generators.external-secrets.io"}, adminRole.Rules[2].APIGroups)
 
 	// Verify status was updated
 	assert.Len(t, config.Status.RBAC.ClusterRoles, 3)
