@@ -3,7 +3,6 @@ import {
   mockOperatorDetection,
   mockNamespaces,
   mockK8sResourceList,
-  mockGeneratorLists,
 } from '../support/mock-api';
 import mockCertificates from '../fixtures/mock-certificates.json';
 import mockIssuers from '../fixtures/mock-issuers.json';
@@ -26,7 +25,6 @@ test.describe('Dashboard renders mock resources and correct status badges', () =
     await mockK8sResourceList(page, 'external-secrets.io', 'v1', 'clustersecretstores', []);
     await mockK8sResourceList(page, 'external-secrets.io', 'v1alpha1', 'pushsecrets', []);
     await mockK8sResourceList(page, 'external-secrets.io', 'v1alpha1', 'clusterpushsecrets', []);
-    await mockGeneratorLists(page);
     await mockK8sResourceList(page, 'secrets-store.csi.x-k8s.io', 'v1', 'secretproviderclasses', mockSecretProviderClasses);
     await mockK8sResourceList(page, 'secrets-store.csi.x-k8s.io', 'v1', 'secretproviderclasspodstatuses', []);
   });

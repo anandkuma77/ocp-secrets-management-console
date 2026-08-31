@@ -11,9 +11,8 @@ get_helm.sh
 # Cursor Rules Directory
 .cursor
 
-# Fetched CRDs at repo root (regenerate with `make fetch-crds`).
-# Use /crds/ so src/components/crds/ source files are not ignored.
-/crds/
+# Fetched CRDs (regenerate with `make fetch-crds`)
+crds/
 
 # Keep generated types in git for now
 # src/generated/

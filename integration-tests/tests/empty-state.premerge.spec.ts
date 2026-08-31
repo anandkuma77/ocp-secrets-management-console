@@ -3,7 +3,6 @@ import {
   mockOperatorDetection,
   mockNamespaces,
   mockK8sResourceList,
-  mockGeneratorLists,
 } from '../support/mock-api';
 
 test.describe('SMC Empty state displays correct user-friendly message', () => {
@@ -22,7 +21,6 @@ test.describe('SMC Empty state displays correct user-friendly message', () => {
     await mockK8sResourceList(page, 'external-secrets.io', 'v1', 'clustersecretstores', []);
     await mockK8sResourceList(page, 'external-secrets.io', 'v1alpha1', 'pushsecrets', []);
     await mockK8sResourceList(page, 'external-secrets.io', 'v1alpha1', 'clusterpushsecrets', []);
-    await mockGeneratorLists(page);
     await mockK8sResourceList(page, 'secrets-store.csi.x-k8s.io', 'v1', 'secretproviderclasses', []);
     await mockK8sResourceList(page, 'secrets-store.csi.x-k8s.io', 'v1', 'secretproviderclasspodstatuses', []);
   });
@@ -45,10 +43,10 @@ test.describe('SMC Empty state displays correct user-friendly message', () => {
     await expect(page.getByText('No secret stores found')).toBeVisible({ timeout: 30000 });
   });
 
-  test('shows empty state for generators when none exist', async ({ page }) => {
+  test('shows empty state for push secrets when none exist', async ({ page }) => {
     await page.goto('/secrets-management');
 
-    await expect(page.getByText('No generators found')).toBeVisible({ timeout: 30000 });
+    await expect(page.getByText('No push secrets found')).toBeVisible({ timeout: 30000 });
   });
 
   test('shows empty state for secret provider classes when none exist', async ({ page }) => {

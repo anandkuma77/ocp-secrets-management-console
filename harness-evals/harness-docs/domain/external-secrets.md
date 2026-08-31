@@ -14,10 +14,8 @@
 | ClusterSecretStore | Cluster | `ClusterSecretStoreModel` | `SecretStoresTable.tsx` |
 | PushSecret | Namespaced | `PushSecretModel` | `PushSecretsTable.tsx` |
 | ClusterPushSecret | Cluster | `ClusterPushSecretModel` | `PushSecretsTable.tsx` |
-| Password, UUID, Fake, Webhook, SSHKey, MFA, Grafana, ACRAccessToken, CloudsmithAccessToken, ECRAuthorizationToken, GCRAccessToken, GithubAccessToken, QuayAccessToken, STSSessionToken, VaultDynamicSecret | Namespaced | `getGeneratorModel(kind)` | `GeneratorsTable.tsx` |
-| ClusterGenerator | Cluster | `ClusterGeneratorModel` | `GeneratorsTable.tsx` |
 
-**Type definitions**: `src/components/crds/ExternalSecret.ts`, `SecretStore.ts`, `PushSecret.ts`, `Generator.ts`
+**Type definitions**: `src/components/crds/ExternalSecret.ts`, `SecretStore.ts`, `PushSecret.ts`
 
 ## Union Types and Type Guards
 
@@ -52,14 +50,6 @@ Configures the backend secret provider connection.
 Pushes Kubernetes Secrets to external providers (reverse of ExternalSecret).
 
 **API version**: `external-secrets.io/v1alpha1` (alpha — may change)
-
-## Generators / ClusterGenerator
-
-Creates secret values (passwords, UUIDs, cloud access tokens, Vault dynamic secrets, etc.) instead of fetching them from a backend. Namespaced generator kinds live in `generators.external-secrets.io/v1alpha1`. `ClusterGenerator` is the cluster-scoped wrapper that embeds any generator spec.
-
-**Key fields displayed**: `metadata.name`, `metadata.namespace`, `kind`, wrapped generator kind (`spec.kind` for ClusterGenerator), a non-sensitive spec summary, and Ready/Configured status.
-
-`GeneratorState` is operator-internal and is not listed.
 
 ## Operator Detection
 

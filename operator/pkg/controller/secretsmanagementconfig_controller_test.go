@@ -117,24 +117,19 @@ func TestReconcileRBAC_CreatesRoles(t *testing.T) {
 	err = r.Get(ctx, types.NamespacedName{Name: "secrets-management-view"}, viewRole)
 	require.NoError(t, err)
 	assert.Equal(t, "secrets-management-view", viewRole.Name)
-	assert.Len(t, viewRole.Rules, 4) // cert-manager, external-secrets, generators, secrets-store-csi
-	assert.Equal(t, []string{"generators.external-secrets.io"}, viewRole.Rules[2].APIGroups)
+	assert.Len(t, viewRole.Rules, 3) // cert-manager, external-secrets, secrets-store-csi
 
 	// Verify delete role was created
 	deleteRole := &rbacv1.ClusterRole{}
 	err = r.Get(ctx, types.NamespacedName{Name: "secrets-management-delete"}, deleteRole)
 	require.NoError(t, err)
 	assert.Equal(t, "secrets-management-delete", deleteRole.Name)
-	assert.Len(t, deleteRole.Rules, 4)
-	assert.Equal(t, []string{"generators.external-secrets.io"}, deleteRole.Rules[2].APIGroups)
 
 	// Verify admin role was created
 	adminRole := &rbacv1.ClusterRole{}
 	err = r.Get(ctx, types.NamespacedName{Name: "secrets-management-admin"}, adminRole)
 	require.NoError(t, err)
 	assert.Equal(t, "secrets-management-admin", adminRole.Name)
-	assert.Len(t, adminRole.Rules, 4)
-	assert.Equal(t, []string{"generators.external-secrets.io"}, adminRole.Rules[2].APIGroups)
 
 	// Verify status was updated
 	assert.Len(t, config.Status.RBAC.ClusterRoles, 3)
@@ -403,7 +398,7 @@ func TestBuildViewClusterRole(t *testing.T) {
 	role := r.buildViewClusterRole("test-prefix")
 
 	assert.Equal(t, "test-prefix-view", role.Name)
-	assert.Len(t, role.Rules, 4)
+	assert.Len(t, role.Rules, 3)
 
 	// Check cert-manager rules
 	assert.Equal(t, []string{"cert-manager.io"}, role.Rules[0].APIGroups)
@@ -415,13 +410,8 @@ func TestBuildViewClusterRole(t *testing.T) {
 	// Check external-secrets rules
 	assert.Equal(t, []string{"external-secrets.io"}, role.Rules[1].APIGroups)
 
-	// Check generator rules
-	assert.Equal(t, []string{"generators.external-secrets.io"}, role.Rules[2].APIGroups)
-	assert.Contains(t, role.Rules[2].Resources, "passwords")
-	assert.Contains(t, role.Rules[2].Resources, "clustergenerators")
-
 	// Check secrets-store-csi rules
-	assert.Equal(t, []string{"secrets-store.csi.x-k8s.io"}, role.Rules[3].APIGroups)
+	assert.Equal(t, []string{"secrets-store.csi.x-k8s.io"}, role.Rules[2].APIGroups)
 }
 
 func TestBuildDeleteClusterRole(t *testing.T) {

@@ -4,14 +4,13 @@ Rules for keeping the Secrets Management Console plugin responsive, derived from
 
 ## 1. WebSocket Watch Budget
 
-The dashboard opens one `useK8sWatchResource` call per resource kind per table. When all operators are installed, the page maintains ~13 simultaneous WebSocket watches for the original resource kinds, plus 16 additional generator watches when the Generators table is rendered (gated by `shouldShowComponent`).
+The dashboard opens one `useK8sWatchResource` call per resource kind per table. When all operators are installed, the page maintains ~13 simultaneous WebSocket watches.
 
 Rules:
 - Do not add new `useK8sWatchResource` calls without updating this count.
 - When adding a new resource kind, add it as a separate table component so `shouldShowComponent` can gate its rendering (and thereby its watches).
 - Never place a `useK8sWatchResource` call inside a loop or row-level component.
 - Cluster-scoped watches cannot be filtered by namespace. Do not work around this by fetching and filtering client-side.
-- Generator kinds are watched via dedicated `GeneratorKindWatch` child components inside `GeneratorsTable` so each kind has a stable hook call. Missing generator CRDs are treated as empty lists, not table errors.
 
 ## 2. Conditional Rendering Gates Watches
 

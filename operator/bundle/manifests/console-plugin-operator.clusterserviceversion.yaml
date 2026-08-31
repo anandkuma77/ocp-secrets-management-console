@@ -196,27 +196,6 @@ spec:
                       verbs:
                         - '*'
                     - apiGroups:
-                        - generators.external-secrets.io
-                      resources:
-                        - acraccesstokens
-                        - cloudsmithaccesstokens
-                        - clustergenerators
-                        - ecrauthorizationtokens
-                        - fakes
-                        - gcraccesstokens
-                        - githubaccesstokens
-                        - grafanas
-                        - mfas
-                        - passwords
-                        - quayaccesstokens
-                        - sshkeys
-                        - stssessiontokens
-                        - uuids
-                        - vaultdynamicsecrets
-                        - webhooks
-                      verbs:
-                        - '*'
-                    - apiGroups:
                         - rbac.authorization.k8s.io
                       resources:
                         - clusterroles

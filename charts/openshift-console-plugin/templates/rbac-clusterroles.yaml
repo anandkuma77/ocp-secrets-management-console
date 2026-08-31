@@ -37,30 +37,6 @@ rules:
       - get
       - list
       - watch
-  # external-secrets generators
-  - apiGroups:
-      - generators.external-secrets.io
-    resources:
-      - acraccesstokens
-      - cloudsmithaccesstokens
-      - clustergenerators
-      - ecrauthorizationtokens
-      - fakes
-      - gcraccesstokens
-      - githubaccesstokens
-      - grafanas
-      - mfas
-      - passwords
-      - quayaccesstokens
-      - sshkeys
-      - stssessiontokens
-      - uuids
-      - vaultdynamicsecrets
-      - webhooks
-    verbs:
-      - get
-      - list
-      - watch
   # secrets-store-csi resources
   - apiGroups:
       - secrets-store.csi.x-k8s.io
@@ -105,28 +81,6 @@ rules:
       - clusterpushsecrets
     verbs:
       - delete
-  # external-secrets generators
-  - apiGroups:
-      - generators.external-secrets.io
-    resources:
-      - acraccesstokens
-      - cloudsmithaccesstokens
-      - clustergenerators
-      - ecrauthorizationtokens
-      - fakes
-      - gcraccesstokens
-      - githubaccesstokens
-      - grafanas
-      - mfas
-      - passwords
-      - quayaccesstokens
-      - sshkeys
-      - stssessiontokens
-      - uuids
-      - vaultdynamicsecrets
-      - webhooks
-    verbs:
-      - delete
   # secrets-store-csi resources (secretproviderclasspodstatuses omitted: status subresource
   # managed by the CSI driver; only SecretProviderClass resources are user-deleted)
   - apiGroups:
@@ -167,28 +121,6 @@ rules:
       - clustersecretstores
       - pushsecrets
       - clusterpushsecrets
-    verbs:
-      - "*"
-  # external-secrets generators
-  - apiGroups:
-      - generators.external-secrets.io
-    resources:
-      - acraccesstokens
-      - cloudsmithaccesstokens
-      - clustergenerators
-      - ecrauthorizationtokens
-      - fakes
-      - gcraccesstokens
-      - githubaccesstokens
-      - grafanas
-      - mfas
-      - passwords
-      - quayaccesstokens
-      - sshkeys
-      - stssessiontokens
-      - uuids
-      - vaultdynamicsecrets
-      - webhooks
     verbs:
       - "*"
   # secrets-store-csi resources

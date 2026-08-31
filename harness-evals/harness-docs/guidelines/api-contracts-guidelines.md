@@ -31,7 +31,6 @@ Interfaces: match the CRD kind exactly (e.g., `Certificate`, `ClusterExternalSec
 | trust-manager | `trust.cert-manager.io` | `v1alpha1` | Bundle |
 | external-secrets | `external-secrets.io` | `v1` | ExternalSecret, ClusterExternalSecret, SecretStore, ClusterSecretStore |
 | external-secrets | `external-secrets.io` | `v1alpha1` | PushSecret, ClusterPushSecret |
-| external-secrets | `generators.external-secrets.io` | `v1alpha1` | ClusterGenerator + namespaced generator kinds (Password, UUID, Fake, ...) |
 | secrets-store-csi | `secrets-store.csi.x-k8s.io` | `v1` | SecretProviderClass, SecretProviderClassPodStatus |
 
 Never hard-code a group or version string inline. Reference `{Kind}Model.group` and `{Kind}Model.version`.
