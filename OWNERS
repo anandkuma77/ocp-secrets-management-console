@@ -3,4 +3,7 @@ approvers:
   - anandkuma77
   - bharath-b-rh
   - mytreya-rh
+  - siddhibhor-56
+reviewers:
+  - siddhibhor-56
 component: Secrets Management Console
