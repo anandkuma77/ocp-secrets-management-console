@@ -31,6 +31,8 @@ import {
   ClusterSecretStoreModel,
   PushSecretModel,
   ClusterPushSecretModel,
+  getGeneratorDefByPlural,
+  getGeneratorModel,
   SecretProviderClassModel,
   SecretProviderClassPodStatusModel,
   SecretProviderClassPodStatus,
@@ -153,18 +155,22 @@ export const ResourceInspect: React.FC = () => {
         return SecretProviderClassModel;
       case 'bundles':
         return BundleModel;
-      default:
-        return null;
+      default: {
+        const generatorDef = getGeneratorDefByPlural(resourceType);
+        return generatorDef ? getGeneratorModel(generatorDef.kind) : null;
+      }
     }
   };
 
   const model = getResourceModel();
+  const generatorDef = getGeneratorDefByPlural(resourceType);
   const isClusterScoped =
     resourceType === 'clusterissuers' ||
     resourceType === 'clustersecretstores' ||
     resourceType === 'clusterexternalsecrets' ||
     resourceType === 'clusterpushsecrets' ||
-    resourceType === 'bundles';
+    resourceType === 'bundles' ||
+    Boolean(generatorDef?.clusterScoped);
 
   /** Minimal K8s resource shape for inspect view (avoids explicit any). */
   type K8sResourceInspect = {
@@ -780,8 +786,10 @@ export const ResourceInspect: React.FC = () => {
         return t('SecretProviderClass');
       case 'bundles':
         return t('Bundle');
-      default:
-        return t('Resource');
+      default: {
+        const def = getGeneratorDefByPlural(resourceType);
+        return def ? def.kind : t('Resource');
+      }
     }
   };
 

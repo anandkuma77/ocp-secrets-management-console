@@ -50,6 +50,12 @@ jest.mock('./components/PushSecretsTable', () => ({
   ),
 }));
 
+jest.mock('./components/GeneratorsTable', () => ({
+  GeneratorsTable: ({ selectedProject }: { selectedProject: string }) => (
+    <div data-test="generators-table">Generators - {selectedProject}</div>
+  ),
+}));
+
 jest.mock('./components/SecretProviderClassTable', () => ({
   SecretProviderClassTable: ({ selectedProject }: { selectedProject: string }) => (
     <div data-test="secret-provider-class-table">SecretProviderClass - {selectedProject}</div>
@@ -278,6 +284,29 @@ describe('SecretsManagement - User Interactions', () => {
         expect(screen.queryByTestId('certificates-table')).not.toBeInTheDocument();
         expect(screen.getByTestId('external-secrets-table')).toBeInTheDocument();
         expect(screen.queryByTestId('secret-stores-table')).not.toBeInTheDocument();
+      });
+    });
+
+    it('filters to show only generators', async () => {
+      const user = userEvent.setup();
+      render(<SecretsManagement />);
+
+      const resourceButton = screen.getByRole('button', { name: /Resource Type/i });
+      await user.click(resourceButton);
+
+      await waitFor(async () => {
+        const menuItems = screen.getAllByRole('menuitem');
+        const item = menuItems.find((entry) => entry.textContent === 'Generators');
+        if (item) {
+          await user.click(item);
+        }
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('generators-table')).toBeInTheDocument();
+        expect(screen.queryByTestId('external-secrets-table')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('push-secrets-table')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('certificates-table')).not.toBeInTheDocument();
       });
     });
 

@@ -45,6 +45,12 @@ jest.mock('./components/PushSecretsTable', () => ({
   ),
 }));
 
+jest.mock('./components/GeneratorsTable', () => ({
+  GeneratorsTable: ({ selectedProject }: { selectedProject: string }) => (
+    <div data-test="generators-table">Generators Table - Project: {selectedProject}</div>
+  ),
+}));
+
 jest.mock('./components/SecretProviderClassTable', () => ({
   SecretProviderClassTable: ({ selectedProject }: { selectedProject: string }) => (
     <div data-test="secret-provider-class-table">
@@ -232,6 +238,7 @@ describe('SecretsManagement', () => {
       expect(screen.getByTestId('external-secrets-table')).toBeInTheDocument();
       expect(screen.getByTestId('secret-stores-table')).toBeInTheDocument();
       expect(screen.getByTestId('push-secrets-table')).toBeInTheDocument();
+      expect(screen.getByTestId('generators-table')).toBeInTheDocument();
 
       // Secrets Store CSI Driver table
       expect(screen.getByTestId('secret-provider-class-table')).toBeInTheDocument();
@@ -248,6 +255,7 @@ describe('SecretsManagement', () => {
       ).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Secret Stores', level: 3 })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Push Secrets', level: 3 })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Generators', level: 3 })).toBeInTheDocument();
       expect(
         screen.getByRole('heading', { name: 'Secret Provider Classes', level: 3 }),
       ).toBeInTheDocument();
@@ -263,9 +271,9 @@ describe('SecretsManagement', () => {
       // Should have trust-manager badge (1 section)
       expect(screen.getByText('trust-manager')).toBeInTheDocument();
 
-      // Should have External Secrets Operator badges (3 sections)
+      // Should have External Secrets Operator badges (4 sections)
       const esooBadges = screen.getAllByText('External Secrets Operator');
-      expect(esooBadges.length).toBeGreaterThanOrEqual(3);
+      expect(esooBadges.length).toBeGreaterThanOrEqual(4);
 
       // Should have Secrets Store CSI Driver badge (1 section)
       expect(screen.getByText('Secrets Store CSI Driver')).toBeInTheDocument();
@@ -314,6 +322,7 @@ describe('SecretsManagement', () => {
       expect(screen.getByTestId('external-secrets-table')).toBeInTheDocument();
       expect(screen.getByTestId('secret-stores-table')).toBeInTheDocument();
       expect(screen.getByTestId('push-secrets-table')).toBeInTheDocument();
+      expect(screen.getByTestId('generators-table')).toBeInTheDocument();
       expect(screen.queryByTestId('secret-provider-class-table')).not.toBeInTheDocument();
     });
 
@@ -446,6 +455,41 @@ describe('SecretsManagement', () => {
       render(<SecretsManagement />);
 
       expect(screen.getByTestId('bundles-table')).toHaveTextContent('Project: all');
+    });
+  });
+
+  describe('Generators Integration', () => {
+    it('shows generators table when External Secrets Operator is installed', () => {
+      mockUseOperatorDetection.mockReturnValue({
+        certManager: { installed: false, loading: false },
+        trustManager: { installed: false, loading: false },
+        externalSecrets: { installed: true, loading: false },
+        secretsStoreCSI: { installed: false, loading: false },
+        loading: false,
+        refresh: jest.fn(),
+      });
+
+      render(<SecretsManagement />);
+
+      expect(screen.getByTestId('generators-table')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Generators', level: 3 })).toBeInTheDocument();
+      expect(screen.getAllByText('External Secrets Operator').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('hides generators table when External Secrets Operator is not installed', () => {
+      mockUseOperatorDetection.mockReturnValue({
+        certManager: { installed: true, loading: false },
+        trustManager: { installed: false, loading: false },
+        externalSecrets: { installed: false, loading: false },
+        secretsStoreCSI: { installed: false, loading: false },
+        loading: false,
+        refresh: jest.fn(),
+      });
+
+      render(<SecretsManagement />);
+
+      expect(screen.queryByTestId('generators-table')).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Generators', level: 3 })).not.toBeInTheDocument();
     });
   });
 
@@ -638,6 +682,7 @@ describe('SecretsManagement', () => {
       expect(screen.getByTestId('external-secrets-table')).toBeInTheDocument();
       expect(screen.getByTestId('secret-stores-table')).toBeInTheDocument();
       expect(screen.getByTestId('push-secrets-table')).toBeInTheDocument();
+      expect(screen.getByTestId('generators-table')).toBeInTheDocument();
       expect(screen.getByTestId('secret-provider-class-table')).toBeInTheDocument();
     });
   });
@@ -865,6 +910,7 @@ describe('SecretsManagement', () => {
       expect(screen.getByRole('heading', { name: 'Certificates' })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Issuers' })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'External Secrets' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Generators' })).toBeInTheDocument();
     });
   });
 });

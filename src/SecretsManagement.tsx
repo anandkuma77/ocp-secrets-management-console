@@ -25,6 +25,7 @@ import { BundlesTable } from './components/BundlesTable';
 import { ExternalSecretsTable } from './components/ExternalSecretsTable';
 import { SecretStoresTable } from './components/SecretStoresTable';
 import { PushSecretsTable } from './components/PushSecretsTable';
+import { GeneratorsTable } from './components/GeneratorsTable';
 import { SecretProviderClassTable } from './components/SecretProviderClassTable';
 import { NoOperatorsInstalled } from './components/OperatorNotInstalled';
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
@@ -59,6 +60,7 @@ type ResourceKind =
   | 'externalsecrets'
   | 'secretstores'
   | 'pushsecrets'
+  | 'generators'
   | 'secretproviderclasses'
   | 'all';
 type ProjectType = 'all' | string;
@@ -273,6 +275,11 @@ export default function SecretsManagement() {
       value: 'pushsecrets',
       label: t('Push Secrets'),
       description: t('Secret push configurations'),
+    },
+    {
+      value: 'generators',
+      label: t('Generators'),
+      description: t('Secret generators'),
     },
   ];
 
@@ -675,6 +682,29 @@ export default function SecretsManagement() {
                   {renderOperatorContent(
                     () => (
                       <PushSecretsTable selectedProject={filters.project} />
+                    ),
+                    'external-secrets',
+                  )}
+                </div>
+              )}
+
+              {shouldShowComponent('external-secrets', 'generators') && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <Flex alignItems={{ default: 'alignItemsCenter' }} style={{ marginBottom: '0.5rem' }}>
+                    <FlexItem>
+                      <Title headingLevel="h3" size="md">
+                        {t('Generators')}
+                      </Title>
+                    </FlexItem>
+                    <FlexItem>
+                      <Badge isRead>{t('External Secrets Operator')}</Badge>
+                      <OperatorStatusBadge status={externalSecrets} />
+                    </FlexItem>
+                  </Flex>
+                  <Divider style={{ marginBottom: '1rem' }} />
+                  {renderOperatorContent(
+                    () => (
+                      <GeneratorsTable selectedProject={filters.project} />
                     ),
                     'external-secrets',
                   )}
