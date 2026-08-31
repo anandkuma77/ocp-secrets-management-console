@@ -481,5 +481,270 @@ describe('GeneratorsTable', () => {
       expect(screen.queryByLabelText('Type resource name to confirm deletion')).not.toBeInTheDocument();
       expect(mockConsoleFetch).not.toHaveBeenCalled();
     });
+
+  });
+
+  describe('Additional Generator Types', () => {
+    const mockWebhook = {
+      kind: 'Webhook',
+      metadata: {
+        name: 'token-generator',
+        namespace: 'app',
+        creationTimestamp: '2026-08-01T00:00:00Z',
+      },
+      spec: { url: 'https://api.example.com/generate' },
+    };
+
+    const mockSSHKey = {
+      kind: 'SSHKey',
+      metadata: {
+        name: 'deploy-key',
+        namespace: 'app',
+        creationTimestamp: '2026-08-01T00:00:00Z',
+      },
+      spec: { keyType: 'rsa', size: 4096 },
+    };
+
+    const mockVaultDynamicSecret = {
+      kind: 'VaultDynamicSecret',
+      metadata: {
+        name: 'vault-creds',
+        namespace: 'app',
+        creationTimestamp: '2026-08-01T00:00:00Z',
+      },
+      spec: { path: 'secret/data/myapp', server: 'https://vault.example.com' },
+    };
+
+    const mockFake = {
+      kind: 'Fake',
+      metadata: {
+        name: 'fake-secret',
+        namespace: 'app',
+        creationTimestamp: '2026-08-01T00:00:00Z',
+      },
+      spec: { data: [{ key: 'a' }, { key: 'b' }, { key: 'c' }] },
+    };
+
+    it('renders Webhook generator with URL details', async () => {
+      mockWatches({ Webhook: [mockWebhook] });
+
+      render(<GeneratorsTable selectedProject="all" />);
+
+      expect(await screen.findByText('token-generator')).toBeInTheDocument();
+      expect(screen.getAllByText('Webhook')).toHaveLength(2);
+      expect(screen.getByText('https://api.example.com/generate')).toBeInTheDocument();
+    });
+
+    it('renders SSHKey generator with keyType and size', async () => {
+      mockWatches({ SSHKey: [mockSSHKey] });
+
+      render(<GeneratorsTable selectedProject="all" />);
+
+      expect(await screen.findByText('deploy-key')).toBeInTheDocument();
+      expect(screen.getAllByText('SSHKey')).toHaveLength(2);
+      expect(screen.getByText('size 4096, rsa')).toBeInTheDocument();
+    });
+
+    it('renders VaultDynamicSecret generator with path and server', async () => {
+      mockWatches({ VaultDynamicSecret: [mockVaultDynamicSecret] });
+
+      render(<GeneratorsTable selectedProject="all" />);
+
+      expect(await screen.findByText('vault-creds')).toBeInTheDocument();
+      expect(screen.getAllByText('VaultDynamicSecret')).toHaveLength(2);
+      expect(screen.getByText('secret/data/myapp, https://vault.example.com')).toBeInTheDocument();
+    });
+
+    it('renders Fake generator with data entry count', async () => {
+      mockWatches({ Fake: [mockFake] });
+
+      render(<GeneratorsTable selectedProject="all" />);
+
+      expect(await screen.findByText('fake-secret')).toBeInTheDocument();
+      expect(screen.getAllByText('Fake')).toHaveLength(2);
+      expect(screen.getByText('3 entries')).toBeInTheDocument();
+    });
+
+    it('renders multiple generator types together sorted by name', async () => {
+      mockWatches({
+        Password: mockPasswords,
+        Webhook: [mockWebhook],
+        SSHKey: [mockSSHKey],
+        UUID: mockUuids,
+      });
+
+      render(<GeneratorsTable selectedProject="all" />);
+
+      const names = await screen.findAllByRole('row');
+      expect(names.length).toBeGreaterThan(4);
+
+      expect(screen.getByText('api-password')).toBeInTheDocument();
+      expect(screen.getByText('db-password')).toBeInTheDocument();
+      expect(screen.getByText('deploy-key')).toBeInTheDocument();
+      expect(screen.getByText('request-id')).toBeInTheDocument();
+      expect(screen.getByText('token-generator')).toBeInTheDocument();
+    });
+  });
+
+  describe('Status Conditions', () => {
+    it('renders condition reason when Ready is False', async () => {
+      const generatorWithReason = {
+        kind: 'Password',
+        metadata: {
+          name: 'error-password',
+          namespace: 'app',
+          creationTimestamp: '2026-08-01T00:00:00Z',
+        },
+        spec: { length: 16 },
+        status: {
+          conditions: [
+            { type: 'Ready', status: 'False', reason: 'ValidationFailed', message: 'Invalid spec' },
+          ],
+        },
+      };
+      mockWatches({ Password: [generatorWithReason] });
+
+      render(<GeneratorsTable selectedProject="all" />);
+
+      expect(await screen.findByText('ValidationFailed')).toBeInTheDocument();
+    });
+
+    it('renders "Not Ready" when Ready is False with no reason', async () => {
+      const generatorNoReason = {
+        kind: 'Password',
+        metadata: {
+          name: 'pending-password',
+          namespace: 'app',
+          creationTimestamp: '2026-08-01T00:00:00Z',
+        },
+        spec: { length: 16 },
+        status: {
+          conditions: [{ type: 'Ready', status: 'False' }],
+        },
+      };
+      mockWatches({ Password: [generatorNoReason] });
+
+      render(<GeneratorsTable selectedProject="all" />);
+
+      expect(await screen.findByText('Not Ready')).toBeInTheDocument();
+    });
+
+    it('renders Configured when status has non-Ready conditions only', async () => {
+      const generatorOtherConditions = {
+        kind: 'Password',
+        metadata: {
+          name: 'other-password',
+          namespace: 'app',
+          creationTimestamp: '2026-08-01T00:00:00Z',
+        },
+        spec: { length: 16 },
+        status: {
+          conditions: [{ type: 'Progressing', status: 'True' }],
+        },
+      };
+      mockWatches({ Password: [generatorOtherConditions] });
+
+      render(<GeneratorsTable selectedProject="all" />);
+
+      expect(await screen.findByText('Configured')).toBeInTheDocument();
+    });
+  });
+
+  describe('Namespace Filtering', () => {
+    it('passes namespace to namespaced generator watches', async () => {
+      mockWatches();
+
+      render(<GeneratorsTable selectedProject="production" />);
+
+      await waitFor(() => {
+        expect(mockUseK8sWatchResource).toHaveBeenCalled();
+      });
+
+      const passwordCall = mockUseK8sWatchResource.mock.calls.find(
+        (call) => call[0].groupVersionKind.kind === 'Password',
+      );
+      expect(passwordCall[0].namespace).toBe('production');
+    });
+
+    it('does not pass namespace to ClusterGenerator watch', async () => {
+      mockWatches();
+
+      render(<GeneratorsTable selectedProject="production" />);
+
+      await waitFor(() => {
+        expect(mockUseK8sWatchResource).toHaveBeenCalled();
+      });
+
+      const clusterGenCall = mockUseK8sWatchResource.mock.calls.find(
+        (call) => call[0].groupVersionKind.kind === 'ClusterGenerator',
+      );
+      expect(clusterGenCall[0].namespace).toBeUndefined();
+    });
+  });
+
+  describe('Delete API Paths', () => {
+    it('uses correct API path for namespaced Webhook generator', async () => {
+      const user = userEvent.setup();
+      const webhook = {
+        kind: 'Webhook',
+        metadata: {
+          name: 'my-webhook',
+          namespace: 'test-ns',
+          creationTimestamp: '2026-08-01T00:00:00Z',
+        },
+        spec: { url: 'https://example.com' },
+      };
+      mockWatches({ Webhook: [webhook] });
+      mockConsoleFetch.mockResolvedValue({
+        ok: true,
+        text: async () => '',
+      });
+
+      render(<GeneratorsTable selectedProject="all" />);
+
+      await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+      await user.type(screen.getByLabelText('Type resource name to confirm deletion'), 'my-webhook');
+      await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+      await waitFor(() => {
+        expect(mockConsoleFetch).toHaveBeenCalledWith(
+          '/api/kubernetes/apis/generators.external-secrets.io/v1alpha1/namespaces/test-ns/webhooks/my-webhook',
+          expect.objectContaining({ method: 'DELETE' }),
+        );
+      });
+    });
+
+    it('uses correct API path for namespaced VaultDynamicSecret generator', async () => {
+      const user = userEvent.setup();
+      const vault = {
+        kind: 'VaultDynamicSecret',
+        metadata: {
+          name: 'vault-secret',
+          namespace: 'vault-ns',
+          creationTimestamp: '2026-08-01T00:00:00Z',
+        },
+        spec: { path: '/secret/data' },
+      };
+      mockWatches({ VaultDynamicSecret: [vault] });
+      mockConsoleFetch.mockResolvedValue({
+        ok: true,
+        text: async () => '',
+      });
+
+      render(<GeneratorsTable selectedProject="all" />);
+
+      await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+      await user.type(screen.getByLabelText('Type resource name to confirm deletion'), 'vault-secret');
+      await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+      await waitFor(() => {
+        expect(mockConsoleFetch).toHaveBeenCalledWith(
+          '/api/kubernetes/apis/generators.external-secrets.io/v1alpha1/namespaces/vault-ns/vaultdynamicsecrets/vault-secret',
+          expect.objectContaining({ method: 'DELETE' }),
+        );
+      });
+    });
   });
 });

@@ -221,5 +221,176 @@ describe('generator CRD helpers', () => {
         ),
       ).toBe('/secrets-management/inspect/uuids/id');
     });
+
+    it('builds inspect paths for all namespaced generator kinds', () => {
+      const namespacedKinds = GENERATOR_KIND_DEFS.filter((def) => !def.clusterScoped);
+      for (const def of namespacedKinds) {
+        const href = getGeneratorInspectHref(resource({ kind: def.kind }));
+        expect(href).toBe(`/secrets-management/inspect/${def.plural}/app/example`);
+      }
+    });
+  });
+
+  describe('describeGenerator - additional generator types', () => {
+    it('summarizes SSHKey spec with keyType', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'SSHKey',
+            spec: { keyType: 'rsa', size: 4096 },
+          }),
+        ),
+      ).toBe('size 4096, rsa');
+    });
+
+    it('summarizes Webhook spec with url', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'Webhook',
+            spec: { url: 'https://api.example.com/generate' },
+          }),
+        ),
+      ).toBe('https://api.example.com/generate');
+    });
+
+    it('summarizes ACRAccessToken spec with registry', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'ACRAccessToken',
+            spec: { registry: 'myregistry.azurecr.io' },
+          }),
+        ),
+      ).toBe('myregistry.azurecr.io');
+    });
+
+    it('summarizes ECRAuthorizationToken spec with region', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'ECRAuthorizationToken',
+            spec: { region: 'us-west-2' },
+          }),
+        ),
+      ).toBe('us-west-2');
+    });
+
+    it('summarizes Grafana spec with url', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'Grafana',
+            spec: { url: 'https://grafana.example.com' },
+          }),
+        ),
+      ).toBe('https://grafana.example.com');
+    });
+
+    it('summarizes GithubAccessToken spec with host', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'GithubAccessToken',
+            spec: { host: 'github.example.com' },
+          }),
+        ),
+      ).toBe('github.example.com');
+    });
+
+    it('summarizes generator with algorithm field', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'SSHKey',
+            spec: { algorithm: 'ed25519' },
+          }),
+        ),
+      ).toBe('ed25519');
+    });
+
+    it('summarizes generator with server field', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'VaultDynamicSecret',
+            spec: { server: 'https://vault.example.com' },
+          }),
+        ),
+      ).toBe('https://vault.example.com');
+    });
+
+    it('summarizes MFA with empty spec', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'MFA',
+            spec: {},
+          }),
+        ),
+      ).toBe('-');
+    });
+
+    it('summarizes QuayAccessToken with registry', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'QuayAccessToken',
+            spec: { registry: 'quay.io' },
+          }),
+        ),
+      ).toBe('quay.io');
+    });
+
+    it('combines multiple spec fields', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'VaultDynamicSecret',
+            spec: { path: 'secret/data/myapp', server: 'https://vault.example.com', region: 'us-east-1' },
+          }),
+        ),
+      ).toBe('us-east-1, secret/data/myapp, https://vault.example.com');
+    });
+  });
+
+  describe('edge cases', () => {
+    it('handles undefined kind gracefully', () => {
+      expect(getGeneratorKind(resource({ kind: undefined }))).toBe('Unknown');
+    });
+
+    it('handles missing spec gracefully', () => {
+      expect(describeGenerator(resource({ kind: 'Password', spec: undefined }))).toBe('-');
+    });
+
+    it('handles ClusterGenerator with empty generator object', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'ClusterGenerator',
+            spec: { kind: 'Password', generator: {} },
+          }),
+        ),
+      ).toBe('Password');
+    });
+
+    it('handles ClusterGenerator with no kind in spec', () => {
+      expect(
+        describeGenerator(
+          resource({
+            kind: 'ClusterGenerator',
+            spec: { generator: { passwordSpec: { length: 16 } } },
+          }),
+        ),
+      ).toBe('length 16');
+    });
+
+    it('getGeneratorDefByKind returns undefined for unknown kind', () => {
+      expect(getGeneratorDefByKind('UnknownGenerator')).toBeUndefined();
+    });
+
+    it('getGeneratorDefByPlural returns undefined for unknown plural', () => {
+      expect(getGeneratorDefByPlural('unknowngenerators')).toBeUndefined();
+    });
   });
 });
