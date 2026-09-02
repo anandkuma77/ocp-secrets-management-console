@@ -104,8 +104,8 @@ test.describe('Trust Manager Bundles - Pre-merge E2E Tests', () => {
       await kebabButtons.first().click();
 
       // Verify menu items
-      await expect(page.getByRole('menuitem', { name: 'Inspect' })).toBeVisible();
-      await expect(page.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: 'Inspect Bundle' })).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: 'Delete Bundle' })).toBeVisible();
     });
   });
 

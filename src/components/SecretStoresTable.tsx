@@ -1,23 +1,11 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Label,
-  LabelProps,
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  MenuToggle,
-  MenuToggleElement,
-} from '@patternfly/react-core';
-import {
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  TimesCircleIcon,
-  EllipsisVIcon,
-} from '@patternfly/react-icons';
+import { Label, LabelProps } from '@patternfly/react-core';
+import { CheckCircleIcon, ExclamationCircleIcon, TimesCircleIcon } from '@patternfly/react-icons';
 import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { SecretStoreModel, ClusterSecretStoreModel, SecretStore } from './crds';
 
@@ -98,14 +86,6 @@ interface SecretStoresTableProps {
 
 export const SecretStoresTable: React.FC<SecretStoresTableProps> = ({ selectedProject }) => {
   const { t } = useTranslation('plugin__ocp-secrets-management');
-  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({});
-
-  const toggleDropdown = (storeId: string) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [storeId]: !prev[storeId],
-    }));
-  };
 
   const [deleteModal, setDeleteModal] = React.useState<{
     isOpen: boolean;
@@ -252,38 +232,33 @@ export const SecretStoresTable: React.FC<SecretStoresTableProps> = ({ selectedPr
           isClusterScopedStore(secretStore) ? 'Cluster' : 'Namespace',
           providerType,
           providerDetails,
-          <Label key={`status-${storeId}`} status={conditionStatus.labelStatus} icon={conditionStatus.icon}>
+          <Label
+            key={`status-${storeId}`}
+            status={conditionStatus.labelStatus}
+            icon={conditionStatus.icon}
+          >
             {conditionStatus.status}
           </Label>,
-          <Dropdown
+          <RowActionsMenu
             key={`dropdown-${storeId}`}
-            isOpen={openDropdowns[storeId] || false}
-            onSelect={() => setOpenDropdowns((prev) => ({ ...prev, [storeId]: false }))}
-            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-              <MenuToggle
-                ref={toggleRef}
-                aria-label="kebab dropdown toggle"
-                variant="plain"
-                onClick={() => toggleDropdown(storeId)}
-                isExpanded={openDropdowns[storeId] || false}
-                icon={<EllipsisVIcon />}
-              />
-            )}
-            shouldFocusToggleOnSelect
-          >
-            <DropdownList>
-              <DropdownItem key="inspect" onClick={() => handleInspect(secretStore)}>
-                {t('Inspect')}
-              </DropdownItem>
-              <DropdownItem key="delete" onClick={() => handleDelete(secretStore)}>
-                {t('Delete')}
-              </DropdownItem>
-            </DropdownList>
-          </Dropdown>,
+            menuId={storeId}
+            actions={[
+              {
+                key: 'inspect',
+                label: t('Inspect {{kind}}', { kind: typeLabel }),
+                onClick: () => handleInspect(secretStore),
+              },
+              {
+                key: 'delete',
+                label: t('Delete {{kind}}', { kind: typeLabel }),
+                onClick: () => handleDelete(secretStore),
+              },
+            ]}
+          />,
         ],
       };
     });
-  }, [secretStores, clusterSecretStores, loaded, openDropdowns, t]);
+  }, [secretStores, clusterSecretStores, loaded, t]);
 
   return (
     <>

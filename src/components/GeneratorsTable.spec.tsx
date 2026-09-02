@@ -12,7 +12,12 @@ jest.mock('@openshift-console/dynamic-plugin-sdk', () => ({
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: Record<string, unknown>) =>
-      opts?.project ? key.replace('{{project}}', String(opts.project)) : key,
+      opts
+        ? Object.entries(opts).reduce(
+            (result, [name, value]) => result.replace(`{{${name}}}`, String(value)),
+            key,
+          )
+        : key,
   }),
 }));
 
@@ -390,8 +395,8 @@ describe('GeneratorsTable', () => {
       render(<GeneratorsTable selectedProject="all" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
-      expect(screen.getByRole('menuitem', { name: 'Inspect' })).toBeInTheDocument();
-      expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Inspect Password' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Delete Password' })).toBeInTheDocument();
     });
 
     it('deletes a namespaced generator after the name is confirmed', async () => {
@@ -405,7 +410,7 @@ describe('GeneratorsTable', () => {
       render(<GeneratorsTable selectedProject="all" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
-      await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete Password' }));
 
       const confirm = screen.getByRole('button', { name: 'Delete' });
       expect(confirm).toBeDisabled();
@@ -433,7 +438,7 @@ describe('GeneratorsTable', () => {
       render(<GeneratorsTable selectedProject="all" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
-      await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete ClusterGenerator' }));
       await user.type(
         screen.getByLabelText('Type resource name to confirm deletion'),
         'cluster-password',
@@ -461,7 +466,7 @@ describe('GeneratorsTable', () => {
       render(<GeneratorsTable selectedProject="all" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
-      await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete Password' }));
       await user.type(screen.getByLabelText('Type resource name to confirm deletion'), 'db-password');
       await user.click(screen.getByRole('button', { name: 'Delete' }));
 
@@ -475,7 +480,7 @@ describe('GeneratorsTable', () => {
       render(<GeneratorsTable selectedProject="all" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
-      await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete Password' }));
       await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
       expect(screen.queryByLabelText('Type resource name to confirm deletion')).not.toBeInTheDocument();
@@ -703,7 +708,7 @@ describe('GeneratorsTable', () => {
       render(<GeneratorsTable selectedProject="all" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
-      await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete Webhook' }));
       await user.type(screen.getByLabelText('Type resource name to confirm deletion'), 'my-webhook');
       await user.click(screen.getByRole('button', { name: 'Delete' }));
 
@@ -735,7 +740,7 @@ describe('GeneratorsTable', () => {
       render(<GeneratorsTable selectedProject="all" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
-      await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete VaultDynamicSecret' }));
       await user.type(screen.getByLabelText('Type resource name to confirm deletion'), 'vault-secret');
       await user.click(screen.getByRole('button', { name: 'Delete' }));
 

@@ -63,7 +63,7 @@ test.describe('Secrets Store CSI Driver - SecretProviderClass resources', () => 
     const kebab = spcRow.locator('[aria-label="kebab dropdown toggle"]');
     await kebab.click();
 
-    await page.getByText('Inspect', { exact: true }).click();
+    await page.getByText('Inspect SecretProviderClass', { exact: true }).click();
 
     await expect(page).toHaveURL(/\/secrets-management\/inspect\/secretproviderclasses\//, {
       timeout: 30000,
