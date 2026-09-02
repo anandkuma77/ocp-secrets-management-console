@@ -554,86 +554,6 @@ export default function SecretsManagement() {
 
             {!operatorsLoading && anyOperatorInstalled && (
               <>
-                {/* cert-manager Resources */}
-                {shouldShowComponent('cert-manager', 'certificates') && (
-                  <div style={{ marginBottom: '2rem' }}>
-                    <Flex
-                      alignItems={{ default: 'alignItemsCenter' }}
-                      style={{ marginBottom: '0.5rem' }}
-                    >
-                      <FlexItem>
-                        <Title headingLevel="h3" size="md">
-                          {t('Certificates')}
-                        </Title>
-                      </FlexItem>
-                      <FlexItem>
-                        <Badge isRead>{t('cert-manager')}</Badge>
-                        <OperatorStatusBadge status={certManager} />
-                      </FlexItem>
-                    </Flex>
-                    <Divider style={{ marginBottom: '1rem' }} />
-                    {renderOperatorContent(
-                      () => (
-                        <CertificatesTable selectedProject={filters.project} />
-                      ),
-                      'cert-manager',
-                    )}
-                  </div>
-                )}
-
-                {shouldShowComponent('cert-manager', 'issuers') && (
-                  <div style={{ marginBottom: '2rem' }}>
-                    <Flex
-                      alignItems={{ default: 'alignItemsCenter' }}
-                      style={{ marginBottom: '0.5rem' }}
-                    >
-                      <FlexItem>
-                        <Title headingLevel="h3" size="md">
-                          {t('Issuers')}
-                        </Title>
-                      </FlexItem>
-                      <FlexItem>
-                        <Badge isRead>{t('cert-manager')}</Badge>
-                        <OperatorStatusBadge status={certManager} />
-                      </FlexItem>
-                    </Flex>
-                    <Divider style={{ marginBottom: '1rem' }} />
-                    {renderOperatorContent(
-                      () => (
-                        <IssuersTable selectedProject={filters.project} />
-                      ),
-                      'cert-manager',
-                    )}
-                  </div>
-                )}
-
-                {/* trust-manager Resources */}
-                {shouldShowComponent('trust-manager', 'bundles') && (
-                  <div style={{ marginBottom: '2rem' }}>
-                    <Flex
-                      alignItems={{ default: 'alignItemsCenter' }}
-                      style={{ marginBottom: '0.5rem' }}
-                    >
-                      <FlexItem>
-                        <Title headingLevel="h3" size="md">
-                          {t('Trust Bundles')}
-                        </Title>
-                      </FlexItem>
-                      <FlexItem>
-                        <Badge isRead>{t('trust-manager')}</Badge>
-                        <OperatorStatusBadge status={trustManager} />
-                      </FlexItem>
-                    </Flex>
-                    <Divider style={{ marginBottom: '1rem' }} />
-                    {renderOperatorContent(
-                      () => (
-                        <BundlesTable selectedProject={filters.project} />
-                      ),
-                      'trust-manager',
-                    )}
-                  </div>
-                )}
-
                 {/* External Secrets Resources */}
                 {shouldShowComponent('external-secrets', 'externalsecrets') && (
                   <div style={{ marginBottom: '2rem' }}>
@@ -735,6 +655,86 @@ export default function SecretsManagement() {
                         <GeneratorsTable selectedProject={filters.project} />
                       ),
                       'external-secrets',
+                    )}
+                  </div>
+                )}
+
+                {/* cert-manager Resources */}
+                {shouldShowComponent('cert-manager', 'certificates') && (
+                  <div style={{ marginBottom: '2rem' }}>
+                    <Flex
+                      alignItems={{ default: 'alignItemsCenter' }}
+                      style={{ marginBottom: '0.5rem' }}
+                    >
+                      <FlexItem>
+                        <Title headingLevel="h3" size="md">
+                          {t('Certificates')}
+                        </Title>
+                      </FlexItem>
+                      <FlexItem>
+                        <Badge isRead>{t('cert-manager')}</Badge>
+                        <OperatorStatusBadge status={certManager} />
+                      </FlexItem>
+                    </Flex>
+                    <Divider style={{ marginBottom: '1rem' }} />
+                    {renderOperatorContent(
+                      () => (
+                        <CertificatesTable selectedProject={filters.project} />
+                      ),
+                      'cert-manager',
+                    )}
+                  </div>
+                )}
+
+                {shouldShowComponent('cert-manager', 'issuers') && (
+                  <div style={{ marginBottom: '2rem' }}>
+                    <Flex
+                      alignItems={{ default: 'alignItemsCenter' }}
+                      style={{ marginBottom: '0.5rem' }}
+                    >
+                      <FlexItem>
+                        <Title headingLevel="h3" size="md">
+                          {t('Issuers')}
+                        </Title>
+                      </FlexItem>
+                      <FlexItem>
+                        <Badge isRead>{t('cert-manager')}</Badge>
+                        <OperatorStatusBadge status={certManager} />
+                      </FlexItem>
+                    </Flex>
+                    <Divider style={{ marginBottom: '1rem' }} />
+                    {renderOperatorContent(
+                      () => (
+                        <IssuersTable selectedProject={filters.project} />
+                      ),
+                      'cert-manager',
+                    )}
+                  </div>
+                )}
+
+                {/* trust-manager Resources */}
+                {shouldShowComponent('trust-manager', 'bundles') && (
+                  <div style={{ marginBottom: '2rem' }}>
+                    <Flex
+                      alignItems={{ default: 'alignItemsCenter' }}
+                      style={{ marginBottom: '0.5rem' }}
+                    >
+                      <FlexItem>
+                        <Title headingLevel="h3" size="md">
+                          {t('Trust Bundles')}
+                        </Title>
+                      </FlexItem>
+                      <FlexItem>
+                        <Badge isRead>{t('trust-manager')}</Badge>
+                        <OperatorStatusBadge status={trustManager} />
+                      </FlexItem>
+                    </Flex>
+                    <Divider style={{ marginBottom: '1rem' }} />
+                    {renderOperatorContent(
+                      () => (
+                        <BundlesTable selectedProject={filters.project} />
+                      ),
+                      'trust-manager',
                     )}
                   </div>
                 )}
