@@ -121,7 +121,7 @@ describe('SecretsManagement', () => {
   describe('Page Structure', () => {
     it('renders the page title', () => {
       const { container } = render(<SecretsManagement />);
-      expect(container.querySelector('title')).toHaveTextContent('Secrets Management');
+      expect(container.querySelector('title')).toHaveTextContent('Secrets Management page title');
     });
 
     it('renders the page heading with icon', () => {
@@ -755,7 +755,7 @@ describe('SecretsManagement', () => {
       render(<SecretsManagement />);
 
       const h1 = screen.getByRole('heading', { level: 1 });
-      expect(h1).toHaveTextContent('Secrets Management');
+      expect(h1).toHaveTextContent('Secrets Management page title');
 
       const h3Headings = screen.getAllByRole('heading', { level: 3 });
       expect(h3Headings.length).toBeGreaterThan(0);
@@ -877,7 +877,7 @@ describe('SecretsManagement', () => {
       render(<SecretsManagement />);
 
       // Main heading
-      expect(screen.getByRole('heading', { name: 'Secrets Management', level: 1 })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Secrets Management page title', level: 1 })).toBeInTheDocument();
 
       // Description
       expect(
