@@ -284,6 +284,46 @@ describe('SecretsManagement', () => {
       const dividers = container.querySelectorAll('.pf-v6-c-divider');
       expect(dividers.length).toBeGreaterThan(0);
     });
+
+    it('renders operator sections in the order: External Secrets Operator, cert-manager, Secrets Store CSI Driver', () => {
+      render(<SecretsManagement />);
+
+      const sectionHeadings = screen
+        .getAllByRole('heading', { level: 3 })
+        .map((heading) => heading.textContent);
+
+      const externalSecretsIndex = sectionHeadings.indexOf('External Secrets');
+      const certificatesIndex = sectionHeadings.indexOf('Certificates');
+      const secretProviderClassesIndex = sectionHeadings.indexOf('Secret Provider Classes');
+
+      // Sanity check that every section we're ordering actually rendered.
+      expect(externalSecretsIndex).toBeGreaterThanOrEqual(0);
+      expect(certificatesIndex).toBeGreaterThanOrEqual(0);
+      expect(secretProviderClassesIndex).toBeGreaterThanOrEqual(0);
+
+      // External Secrets Operator sections must render before cert-manager sections,
+      // which must render before the Secrets Store CSI Driver section.
+      expect(externalSecretsIndex).toBeLessThan(certificatesIndex);
+      expect(certificatesIndex).toBeLessThan(secretProviderClassesIndex);
+    });
+
+    it('renders the External Secrets Operator table before the cert-manager and Secrets Store CSI Driver tables in the DOM', () => {
+      render(<SecretsManagement />);
+
+      const externalSecretsTable = screen.getByTestId('external-secrets-table');
+      const certificatesTable = screen.getByTestId('certificates-table');
+      const secretProviderClassTable = screen.getByTestId('secret-provider-class-table');
+
+      // Node.DOCUMENT_POSITION_FOLLOWING (4) means the argument comes after `externalSecretsTable`.
+      expect(
+        externalSecretsTable.compareDocumentPosition(certificatesTable) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        certificatesTable.compareDocumentPosition(secretProviderClassTable) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
   });
 
   describe('Partial Operator Installation', () => {

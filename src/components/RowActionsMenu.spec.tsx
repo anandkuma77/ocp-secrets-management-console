@@ -28,7 +28,9 @@ describe('RowActionsMenu', () => {
     expect(onDelete).toHaveBeenCalledTimes(1);
     expect(onInspect).not.toHaveBeenCalled();
     await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Delete Certificate' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('menuitem', { name: 'Delete Certificate' }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -51,7 +53,9 @@ describe('RowActionsMenu', () => {
     await user.click(screen.getByText('Outside content'));
 
     await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Inspect Certificate' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('menuitem', { name: 'Inspect Certificate' }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -82,4 +86,55 @@ describe('RowActionsMenu', () => {
     });
     expect(screen.getByRole('menuitem', { name: 'Inspect Row 2' })).toBeInTheDocument();
   });
+
+  it('closes a menu opened via ActiveRowMenuProvider when clicking outside', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ActiveRowMenuProvider>
+        <div>
+          <RowActionsMenu
+            menuId="row-1"
+            actions={[{ key: 'inspect', label: 'Inspect Row 1', onClick: jest.fn() }]}
+          />
+          <div data-test="outside">Outside content</div>
+        </div>
+      </ActiveRowMenuProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /kebab dropdown toggle/i }));
+    expect(screen.getByRole('menuitem', { name: 'Inspect Row 1' })).toBeInTheDocument();
+
+    await user.click(screen.getByText('Outside content'));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: 'Inspect Row 1' })).not.toBeInTheDocument();
+    });
+  });
+
+  it.each(['Secret', 'Certificate'])(
+    'formats kebab actions as "Inspect %s" / "Delete %s" instead of the old static labels',
+    async (kind) => {
+      const user = userEvent.setup();
+
+      render(
+        <RowActionsMenu
+          menuId={`row-${kind}`}
+          actions={[
+            { key: 'inspect', label: `Inspect ${kind}`, onClick: jest.fn() },
+            { key: 'delete', label: `Delete ${kind}`, onClick: jest.fn() },
+          ]}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /kebab dropdown toggle/i }));
+
+      expect(screen.getByRole('menuitem', { name: `Inspect ${kind}` })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: `Delete ${kind}` })).toBeInTheDocument();
+
+      // Old static labels without the resource kind suffix must no longer be present.
+      expect(screen.queryByRole('menuitem', { name: 'Inspect' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Delete' })).not.toBeInTheDocument();
+    },
+  );
 });
