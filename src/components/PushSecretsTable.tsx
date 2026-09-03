@@ -1,24 +1,16 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Label,
-  LabelProps,
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  MenuToggle,
-  MenuToggleElement,
-} from '@patternfly/react-core';
+import { Label, LabelProps } from '@patternfly/react-core';
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   TimesCircleIcon,
-  EllipsisVIcon,
   SyncAltIcon,
 } from '@patternfly/react-icons';
 import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import {
   PushSecretModel,
@@ -71,7 +63,6 @@ interface PushSecretsTableProps {
 
 export const PushSecretsTable: React.FC<PushSecretsTableProps> = ({ selectedProject }) => {
   const { t } = useTranslation('plugin__ocp-secrets-management');
-  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({});
   const [deleteModal, setDeleteModal] = React.useState<{
     isOpen: boolean;
     pushSecret: PushSecretResource | null;
@@ -83,13 +74,6 @@ export const PushSecretsTable: React.FC<PushSecretsTableProps> = ({ selectedProj
     isDeleting: false,
     error: null,
   });
-
-  const toggleDropdown = (pushSecretId: string) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [pushSecretId]: !prev[pushSecretId],
-    }));
-  };
 
   const handleDelete = async (pushSecret: PushSecretResource) => {
     setDeleteModal((prev) => ({ ...prev, isDeleting: true, error: null }));
@@ -200,6 +184,7 @@ export const PushSecretsTable: React.FC<PushSecretsTableProps> = ({ selectedProj
       const refreshInterval = displaySpec?.refreshInterval || 'Default';
 
       const resourceType = isCluster ? 'ClusterPushSecret' : 'PushSecret';
+      const resourceKind = isCluster ? t('ClusterPushSecret') : t('PushSecret');
       const namespace = isCluster ? 'Cluster-wide' : pushSecret.metadata.namespace;
 
       return {
@@ -210,48 +195,40 @@ export const PushSecretsTable: React.FC<PushSecretsTableProps> = ({ selectedProj
           secretStoreText,
           sourceSecret,
           refreshInterval,
-          <Label key={`status-${pushSecretId}`} status={conditionStatus.labelStatus} icon={conditionStatus.icon}>
+          <Label
+            key={`status-${pushSecretId}`}
+            status={conditionStatus.labelStatus}
+            icon={conditionStatus.icon}
+          >
             {conditionStatus.status}
           </Label>,
-          <Dropdown
+          <RowActionsMenu
             key={`dropdown-${pushSecretId}`}
-            isOpen={openDropdowns[pushSecretId] || false}
-            onSelect={() => setOpenDropdowns((prev) => ({ ...prev, [pushSecretId]: false }))}
-            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-              <MenuToggle
-                ref={toggleRef}
-                aria-label="kebab dropdown toggle"
-                variant="plain"
-                onClick={() => toggleDropdown(pushSecretId)}
-                isExpanded={openDropdowns[pushSecretId] || false}
-                icon={<EllipsisVIcon />}
-              />
-            )}
-            shouldFocusToggleOnSelect
-          >
-            <DropdownList>
-              <DropdownItem
-                key="inspect"
-                onClick={() => {
-                  const resourceType = isCluster ? 'clusterpushsecrets' : 'pushsecrets';
+            menuId={pushSecretId}
+            actions={[
+              {
+                key: 'inspect',
+                label: t('Inspect {{kind}}', { kind: resourceKind }),
+                onClick: () => {
+                  const inspectResourceType = isCluster ? 'clusterpushsecrets' : 'pushsecrets';
                   if (isCluster) {
-                    window.location.href = `/secrets-management/inspect/${resourceType}/${pushSecret.metadata.name}`;
+                    window.location.href = `/secrets-management/inspect/${inspectResourceType}/${pushSecret.metadata.name}`;
                   } else {
-                    window.location.href = `/secrets-management/inspect/${resourceType}/${pushSecret.metadata.namespace}/${pushSecret.metadata.name}`;
+                    window.location.href = `/secrets-management/inspect/${inspectResourceType}/${pushSecret.metadata.namespace}/${pushSecret.metadata.name}`;
                   }
-                }}
-              >
-                {t('Inspect')}
-              </DropdownItem>
-              <DropdownItem key="delete" onClick={() => openDeleteModal(pushSecret)}>
-                {t('Delete')}
-              </DropdownItem>
-            </DropdownList>
-          </Dropdown>,
+                },
+              },
+              {
+                key: 'delete',
+                label: t('Delete {{kind}}', { kind: resourceKind }),
+                onClick: () => openDeleteModal(pushSecret),
+              },
+            ]}
+          />,
         ],
       };
     });
-  }, [pushSecrets, clusterPushSecrets, loaded, openDropdowns, t]);
+  }, [pushSecrets, clusterPushSecrets, loaded, t]);
 
   const getErrorMessage = () => {
     if (loadError?.message?.includes('no matches for kind')) {

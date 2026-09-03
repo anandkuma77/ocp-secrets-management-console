@@ -71,7 +71,7 @@ spec:
     const kebab = certRow.locator('[aria-label="kebab dropdown toggle"]');
     await kebab.click();
 
-    await page.getByText('Delete', { exact: true }).click();
+    await page.getByText('Delete Certificate', { exact: true }).click();
 
     const modal = page.locator('.pf-v6-c-modal-box, .pf-v5-c-modal-box, .pf-c-modal-box');
     await expect(modal).toBeVisible({ timeout: 5000 });

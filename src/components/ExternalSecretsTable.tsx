@@ -1,24 +1,16 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Label,
-  LabelProps,
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  MenuToggle,
-  MenuToggleElement,
-} from '@patternfly/react-core';
+import { Label, LabelProps } from '@patternfly/react-core';
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   TimesCircleIcon,
   SyncAltIcon,
-  EllipsisVIcon,
 } from '@patternfly/react-icons';
 import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import {
   ExternalSecretModel,
@@ -125,7 +117,6 @@ interface ExternalSecretsTableProps {
 
 export const ExternalSecretsTable: React.FC<ExternalSecretsTableProps> = ({ selectedProject }) => {
   const { t } = useTranslation('plugin__ocp-secrets-management');
-  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({});
   const [deleteModal, setDeleteModal] = React.useState<{
     isOpen: boolean;
     externalSecret: ExternalSecretResource | null;
@@ -137,13 +128,6 @@ export const ExternalSecretsTable: React.FC<ExternalSecretsTableProps> = ({ sele
     isDeleting: false,
     error: null,
   });
-
-  const toggleDropdown = (secretId: string) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [secretId]: !prev[secretId],
-    }));
-  };
 
   const handleInspect = (externalSecret: ExternalSecretResource) => {
     const isCluster = isClusterExternalSecret(externalSecret);
@@ -291,6 +275,7 @@ export const ExternalSecretsTable: React.FC<ExternalSecretsTableProps> = ({ sele
         resource.metadata.name
       }`;
       const resourceType = isCluster ? 'ClusterExternalSecret' : 'ExternalSecret';
+      const resourceKind = isCluster ? t('ClusterExternalSecret') : t('ExternalSecret');
       const namespace = isCluster ? 'Cluster-wide' : resource.metadata.namespace;
       // refreshTime exists on ExternalSecretStatus; ClusterExternalSecretStatus does not have it
       const refreshTime = !isCluster ? (resource as ExternalSecret).status?.refreshTime : undefined;
@@ -305,38 +290,33 @@ export const ExternalSecretsTable: React.FC<ExternalSecretsTableProps> = ({ sele
           secretStore,
           refreshInterval,
           nextRefresh,
-          <Label key={`${secretId}-status`} status={conditionStatus.labelStatus} icon={conditionStatus.icon}>
+          <Label
+            key={`${secretId}-status`}
+            status={conditionStatus.labelStatus}
+            icon={conditionStatus.icon}
+          >
             {conditionStatus.status}
           </Label>,
-          <Dropdown
+          <RowActionsMenu
             key={`${secretId}-actions`}
-            isOpen={openDropdowns[secretId] || false}
-            onSelect={() => setOpenDropdowns((prev) => ({ ...prev, [secretId]: false }))}
-            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-              <MenuToggle
-                ref={toggleRef}
-                aria-label="kebab dropdown toggle"
-                variant="plain"
-                onClick={() => toggleDropdown(secretId)}
-                isExpanded={openDropdowns[secretId] || false}
-                icon={<EllipsisVIcon />}
-              />
-            )}
-            shouldFocusToggleOnSelect
-          >
-            <DropdownList>
-              <DropdownItem key="inspect" onClick={() => handleInspect(resource)}>
-                {t('Inspect')}
-              </DropdownItem>
-              <DropdownItem key="delete" onClick={() => handleDelete(resource)}>
-                {t('Delete')}
-              </DropdownItem>
-            </DropdownList>
-          </Dropdown>,
+            menuId={secretId}
+            actions={[
+              {
+                key: 'inspect',
+                label: t('Inspect {{kind}}', { kind: resourceKind }),
+                onClick: () => handleInspect(resource),
+              },
+              {
+                key: 'delete',
+                label: t('Delete {{kind}}', { kind: resourceKind }),
+                onClick: () => handleDelete(resource),
+              },
+            ]}
+          />,
         ],
       };
     });
-  }, [allSecrets, loaded, openDropdowns, t]);
+  }, [allSecrets, loaded, t]);
 
   return (
     <>

@@ -1,24 +1,16 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Label,
-  LabelProps,
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  MenuToggle,
-  MenuToggleElement,
-} from '@patternfly/react-core';
+import { Label, LabelProps } from '@patternfly/react-core';
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   TimesCircleIcon,
-  EllipsisVIcon,
 } from '@patternfly/react-icons';
 import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { CertificateModel, Certificate } from './crds';
 
@@ -96,7 +88,6 @@ interface CertificatesTableProps {
 
 export const CertificatesTable: React.FC<CertificatesTableProps> = ({ selectedProject }) => {
   const { t } = useTranslation('plugin__ocp-secrets-management');
-  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({});
   const [deleteModal, setDeleteModal] = React.useState<{
     isOpen: boolean;
     certificate: Certificate | null;
@@ -108,13 +99,6 @@ export const CertificatesTable: React.FC<CertificatesTableProps> = ({ selectedPr
     isDeleting: false,
     error: null,
   });
-
-  const toggleDropdown = (certId: string) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [certId]: !prev[certId],
-    }));
-  };
 
   const handleInspect = (cert: Certificate) => {
     const namespace = cert.metadata.namespace || 'demo';
@@ -223,38 +207,33 @@ export const CertificatesTable: React.FC<CertificatesTableProps> = ({ selectedPr
           ) : (
             '-'
           ),
-          <Label key={`status-${certId}`} status={conditionStatus.labelStatus} icon={conditionStatus.icon}>
+          <Label
+            key={`status-${certId}`}
+            status={conditionStatus.labelStatus}
+            icon={conditionStatus.icon}
+          >
             {conditionStatus.status}
           </Label>,
-          <Dropdown
+          <RowActionsMenu
             key={`dropdown-${certId}`}
-            isOpen={openDropdowns[certId] || false}
-            onSelect={() => setOpenDropdowns((prev) => ({ ...prev, [certId]: false }))}
-            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-              <MenuToggle
-                ref={toggleRef}
-                aria-label="kebab dropdown toggle"
-                variant="plain"
-                onClick={() => toggleDropdown(certId)}
-                isExpanded={openDropdowns[certId] || false}
-                icon={<EllipsisVIcon />}
-              />
-            )}
-            shouldFocusToggleOnSelect
-          >
-            <DropdownList>
-              <DropdownItem key="inspect" onClick={() => handleInspect(cert)}>
-                {t('Inspect')}
-              </DropdownItem>
-              <DropdownItem key="delete" onClick={() => handleDelete(cert)}>
-                {t('Delete')}
-              </DropdownItem>
-            </DropdownList>
-          </Dropdown>,
+            menuId={certId}
+            actions={[
+              {
+                key: 'inspect',
+                label: t('Inspect {{kind}}', { kind: t('Certificate') }),
+                onClick: () => handleInspect(cert),
+              },
+              {
+                key: 'delete',
+                label: t('Delete {{kind}}', { kind: t('Certificate') }),
+                onClick: () => handleDelete(cert),
+              },
+            ]}
+          />,
         ],
       };
     });
-  }, [certificates, loaded, openDropdowns, t]);
+  }, [certificates, loaded, t]);
 
   return (
     <>

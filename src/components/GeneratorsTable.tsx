@@ -1,18 +1,11 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Label,
-  LabelProps,
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  MenuToggle,
-  MenuToggleElement,
-} from '@patternfly/react-core';
-import { CheckCircleIcon, TimesCircleIcon, EllipsisVIcon } from '@patternfly/react-icons';
+import { Label, LabelProps } from '@patternfly/react-core';
+import { CheckCircleIcon, TimesCircleIcon } from '@patternfly/react-icons';
 import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import {
   GENERATOR_KIND_DEFS,
@@ -119,7 +112,6 @@ interface GeneratorsTableProps {
 
 export const GeneratorsTable: React.FC<GeneratorsTableProps> = ({ selectedProject }) => {
   const { t } = useTranslation('plugin__ocp-secrets-management');
-  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({});
   const [watchState, setWatchState] = React.useState<Record<string, KindWatchResult>>({});
   const [deleteModal, setDeleteModal] = React.useState<{
     isOpen: boolean;
@@ -141,13 +133,6 @@ export const GeneratorsTable: React.FC<GeneratorsTableProps> = ({ selectedProjec
       return { ...prev, [result.kind]: result };
     });
   }, []);
-
-  const toggleDropdown = (generatorId: string) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [generatorId]: !prev[generatorId],
-    }));
-  };
 
   const handleInspect = (generator: GeneratorResource) => {
     window.location.href = getGeneratorInspectHref(generator);
@@ -247,6 +232,7 @@ export const GeneratorsTable: React.FC<GeneratorsTableProps> = ({ selectedProjec
         : generator.metadata.namespace || '-';
       const generatorId = `${generator.kind}-${namespaceLabel}-${generator.metadata.name}`;
       const conditionStatus = getGeneratorStatus(generator);
+      const generatorKind = generator.kind || t('Generator');
 
       return {
         cells: [
@@ -262,35 +248,26 @@ export const GeneratorsTable: React.FC<GeneratorsTableProps> = ({ selectedProjec
           >
             {conditionStatus.status}
           </Label>,
-          <Dropdown
+          <RowActionsMenu
             key={`${generatorId}-actions`}
-            isOpen={openDropdowns[generatorId] || false}
-            onSelect={() => setOpenDropdowns((prev) => ({ ...prev, [generatorId]: false }))}
-            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-              <MenuToggle
-                ref={toggleRef}
-                aria-label="kebab dropdown toggle"
-                variant="plain"
-                onClick={() => toggleDropdown(generatorId)}
-                isExpanded={openDropdowns[generatorId] || false}
-                icon={<EllipsisVIcon />}
-              />
-            )}
-            shouldFocusToggleOnSelect
-          >
-            <DropdownList>
-              <DropdownItem key="inspect" onClick={() => handleInspect(generator)}>
-                {t('Inspect')}
-              </DropdownItem>
-              <DropdownItem key="delete" onClick={() => openDeleteModal(generator)}>
-                {t('Delete')}
-              </DropdownItem>
-            </DropdownList>
-          </Dropdown>,
+            menuId={generatorId}
+            actions={[
+              {
+                key: 'inspect',
+                label: t('Inspect {{kind}}', { kind: generatorKind }),
+                onClick: () => handleInspect(generator),
+              },
+              {
+                key: 'delete',
+                label: t('Delete {{kind}}', { kind: generatorKind }),
+                onClick: () => openDeleteModal(generator),
+              },
+            ]}
+          />,
         ],
       };
     });
-  }, [loaded, watchState, openDropdowns, t]);
+  }, [loaded, watchState, t]);
 
   return (
     <>

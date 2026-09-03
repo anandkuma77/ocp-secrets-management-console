@@ -1,24 +1,16 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Label,
-  LabelProps,
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  MenuToggle,
-  MenuToggleElement,
-} from '@patternfly/react-core';
+import { Label, LabelProps } from '@patternfly/react-core';
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   TimesCircleIcon,
-  EllipsisVIcon,
 } from '@patternfly/react-icons';
 import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import {
   SecretProviderClassModel,
@@ -128,7 +120,6 @@ export const SecretProviderClassTable: React.FC<SecretProviderClassTableProps> =
   selectedProject,
 }) => {
   const { t } = useTranslation('plugin__ocp-secrets-management');
-  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({});
   const [deleteModal, setDeleteModal] = React.useState<{
     isOpen: boolean;
     secretProviderClass: SecretProviderClass | null;
@@ -140,13 +131,6 @@ export const SecretProviderClassTable: React.FC<SecretProviderClassTableProps> =
     isDeleting: false,
     error: null,
   });
-
-  const toggleDropdown = (spcId: string) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [spcId]: !prev[spcId],
-    }));
-  };
 
   const handleDelete = async (secretProviderClass: SecretProviderClass) => {
     setDeleteModal((prev) => ({ ...prev, isDeleting: true, error: null }));
@@ -258,44 +242,35 @@ export const SecretProviderClassTable: React.FC<SecretProviderClassTableProps> =
           ) : (
             '-'
           ),
-          <Label key={`status-${spcId}`} status={conditionStatus.labelStatus} icon={conditionStatus.icon}>
+          <Label
+            key={`status-${spcId}`}
+            status={conditionStatus.labelStatus}
+            icon={conditionStatus.icon}
+          >
             {conditionStatus.status}
           </Label>,
-          <Dropdown
+          <RowActionsMenu
             key={`dropdown-${spcId}`}
-            isOpen={openDropdowns[spcId] || false}
-            onSelect={() => setOpenDropdowns((prev) => ({ ...prev, [spcId]: false }))}
-            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-              <MenuToggle
-                ref={toggleRef}
-                aria-label="kebab dropdown toggle"
-                variant="plain"
-                onClick={() => toggleDropdown(spcId)}
-                isExpanded={openDropdowns[spcId] || false}
-                icon={<EllipsisVIcon />}
-              />
-            )}
-            shouldFocusToggleOnSelect
-          >
-            <DropdownList>
-              <DropdownItem
-                key="inspect"
-                onClick={() => {
-                  const url = `/secrets-management/inspect/secretproviderclasses/${spc.metadata.namespace}/${spc.metadata.name}`;
-                  window.location.href = url;
-                }}
-              >
-                {t('Inspect')}
-              </DropdownItem>
-              <DropdownItem key="delete" onClick={() => openDeleteModal(spc)}>
-                {t('Delete')}
-              </DropdownItem>
-            </DropdownList>
-          </Dropdown>,
+            menuId={spcId}
+            actions={[
+              {
+                key: 'inspect',
+                label: t('Inspect {{kind}}', { kind: t('SecretProviderClass') }),
+                onClick: () => {
+                  window.location.href = `/secrets-management/inspect/secretproviderclasses/${spc.metadata.namespace}/${spc.metadata.name}`;
+                },
+              },
+              {
+                key: 'delete',
+                label: t('Delete {{kind}}', { kind: t('SecretProviderClass') }),
+                onClick: () => openDeleteModal(spc),
+              },
+            ]}
+          />,
         ],
       };
     });
-  }, [secretProviderClasses, podStatuses, loaded, openDropdowns, t]);
+  }, [secretProviderClasses, podStatuses, loaded, t]);
 
   return (
     <>

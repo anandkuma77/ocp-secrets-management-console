@@ -20,7 +20,7 @@ test.describe('Details/Inspect pane fetches and displays live CR YAML/JSON', () 
     const kebab = firstCertRow.locator('[aria-label="kebab dropdown toggle"]');
     await kebab.click();
 
-    await page.getByText('Inspect', { exact: true }).click();
+    await page.getByText('Inspect Certificate', { exact: true }).click();
 
     await expect(page).toHaveURL(/\/secrets-management\/inspect\/certificates\//, {
       timeout: 30000,

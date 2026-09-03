@@ -1,23 +1,11 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Label,
-  LabelProps,
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  MenuToggle,
-  MenuToggleElement,
-} from '@patternfly/react-core';
-import {
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  TimesCircleIcon,
-  EllipsisVIcon,
-} from '@patternfly/react-icons';
+import { Label, LabelProps } from '@patternfly/react-core';
+import { CheckCircleIcon, ExclamationCircleIcon, TimesCircleIcon } from '@patternfly/react-icons';
 import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { IssuerModel, ClusterIssuerModel, Issuer } from './crds';
 
@@ -61,7 +49,6 @@ interface IssuersTableProps {
 
 export const IssuersTable: React.FC<IssuersTableProps> = ({ selectedProject }) => {
   const { t } = useTranslation('plugin__ocp-secrets-management');
-  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({});
   const [deleteModal, setDeleteModal] = React.useState<{
     isOpen: boolean;
     issuer: Issuer | null;
@@ -73,13 +60,6 @@ export const IssuersTable: React.FC<IssuersTableProps> = ({ selectedProject }) =
     isDeleting: false,
     error: null,
   });
-
-  const toggleDropdown = (issuerId: string) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [issuerId]: !prev[issuerId],
-    }));
-  };
 
   const handleInspect = (issuer: Issuer) => {
     const resourceType = issuer.metadata.namespace ? 'issuers' : 'clusterissuers';
@@ -195,6 +175,7 @@ export const IssuersTable: React.FC<IssuersTableProps> = ({ selectedProject }) =
       const conditionStatus = getConditionStatus(issuer);
       const issuerType = getIssuerType(issuer);
       const issuerId = `${issuer.metadata.namespace || 'cluster'}-${issuer.metadata.name}`;
+      const issuerKind = issuer.metadata.namespace ? t('Issuer') : t('ClusterIssuer');
 
       let details = '-';
       if (issuer.spec.acme) {
@@ -212,38 +193,33 @@ export const IssuersTable: React.FC<IssuersTableProps> = ({ selectedProject }) =
           issuer.scope === 'Namespace' ? 'Issuer' : 'ClusterIssuer',
           issuerType,
           details,
-          <Label key={`status-${issuerId}`} status={conditionStatus.labelStatus} icon={conditionStatus.icon}>
+          <Label
+            key={`status-${issuerId}`}
+            status={conditionStatus.labelStatus}
+            icon={conditionStatus.icon}
+          >
             {conditionStatus.status}
           </Label>,
-          <Dropdown
+          <RowActionsMenu
             key={`dropdown-${issuerId}`}
-            isOpen={openDropdowns[issuerId] || false}
-            onSelect={() => setOpenDropdowns((prev) => ({ ...prev, [issuerId]: false }))}
-            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-              <MenuToggle
-                ref={toggleRef}
-                aria-label="kebab dropdown toggle"
-                variant="plain"
-                onClick={() => toggleDropdown(issuerId)}
-                isExpanded={openDropdowns[issuerId] || false}
-                icon={<EllipsisVIcon />}
-              />
-            )}
-            shouldFocusToggleOnSelect
-          >
-            <DropdownList>
-              <DropdownItem key="inspect" onClick={() => handleInspect(issuer)}>
-                {t('Inspect')}
-              </DropdownItem>
-              <DropdownItem key="delete" onClick={() => handleDelete(issuer)}>
-                {t('Delete')}
-              </DropdownItem>
-            </DropdownList>
-          </Dropdown>,
+            menuId={issuerId}
+            actions={[
+              {
+                key: 'inspect',
+                label: t('Inspect {{kind}}', { kind: issuerKind }),
+                onClick: () => handleInspect(issuer),
+              },
+              {
+                key: 'delete',
+                label: t('Delete {{kind}}', { kind: issuerKind }),
+                onClick: () => handleDelete(issuer),
+              },
+            ]}
+          />,
         ],
       };
     });
-  }, [issuers, clusterIssuers, loaded, openDropdowns, t]);
+  }, [issuers, clusterIssuers, loaded, t]);
 
   return (
     <>

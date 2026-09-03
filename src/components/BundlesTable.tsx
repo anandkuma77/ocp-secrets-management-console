@@ -1,23 +1,11 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Label,
-  LabelProps,
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  MenuToggle,
-  MenuToggleElement,
-} from '@patternfly/react-core';
-import {
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  TimesCircleIcon,
-  EllipsisVIcon,
-} from '@patternfly/react-icons';
+import { Label, LabelProps } from '@patternfly/react-core';
+import { CheckCircleIcon, ExclamationCircleIcon, TimesCircleIcon } from '@patternfly/react-icons';
 import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { BundleModel, Bundle, BundleSource } from './crds';
 
@@ -91,7 +79,6 @@ interface BundlesTableProps {
 
 export const BundlesTable: React.FC<BundlesTableProps> = ({ selectedProject }) => {
   const { t } = useTranslation('plugin__ocp-secrets-management');
-  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({});
   const [deleteModal, setDeleteModal] = React.useState<{
     isOpen: boolean;
     bundle: Bundle | null;
@@ -103,13 +90,6 @@ export const BundlesTable: React.FC<BundlesTableProps> = ({ selectedProject }) =
     isDeleting: false,
     error: null,
   });
-
-  const toggleDropdown = (bundleId: string) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [bundleId]: !prev[bundleId],
-    }));
-  };
 
   const handleInspect = (bundle: Bundle) => {
     const name = bundle.metadata.name;
@@ -208,35 +188,26 @@ export const BundlesTable: React.FC<BundlesTableProps> = ({ selectedProject }) =
           <Label key={`status-${bundleId}`} status={syncStatus.labelStatus} icon={syncStatus.icon}>
             {syncStatus.status}
           </Label>,
-          <Dropdown
+          <RowActionsMenu
             key={`dropdown-${bundleId}`}
-            isOpen={openDropdowns[bundleId] || false}
-            onSelect={() => setOpenDropdowns((prev) => ({ ...prev, [bundleId]: false }))}
-            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-              <MenuToggle
-                ref={toggleRef}
-                aria-label="kebab dropdown toggle"
-                variant="plain"
-                onClick={() => toggleDropdown(bundleId)}
-                isExpanded={openDropdowns[bundleId] || false}
-                icon={<EllipsisVIcon />}
-              />
-            )}
-            shouldFocusToggleOnSelect
-          >
-            <DropdownList>
-              <DropdownItem key="inspect" onClick={() => handleInspect(bundle)}>
-                {t('Inspect')}
-              </DropdownItem>
-              <DropdownItem key="delete" onClick={() => openDeleteModal(bundle)}>
-                {t('Delete')}
-              </DropdownItem>
-            </DropdownList>
-          </Dropdown>,
+            menuId={bundleId}
+            actions={[
+              {
+                key: 'inspect',
+                label: t('Inspect {{kind}}', { kind: t('Bundle') }),
+                onClick: () => handleInspect(bundle),
+              },
+              {
+                key: 'delete',
+                label: t('Delete {{kind}}', { kind: t('Bundle') }),
+                onClick: () => openDeleteModal(bundle),
+              },
+            ]}
+          />,
         ],
       };
     });
-  }, [bundles, loaded, openDropdowns, t]);
+  }, [bundles, loaded, t]);
 
   return (
     <>
