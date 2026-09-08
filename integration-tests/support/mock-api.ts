@@ -26,6 +26,23 @@ export interface MockOperatorOptions {
 }
 
 /**
+ * `useK8sWatchResource` watches resources over a WebSocket when one is
+ * available, and only falls back to REST polling (the mechanism
+ * `mockK8sResourceList` intercepts) when the WS can't be established.
+ * Against a real console (e.g. a claimed CI cluster) that WS works fine,
+ * so the SDK never falls back and our REST route mocks are never hit,
+ * leaving resource tables stuck waiting on a real (unmocked) watch.
+ * Closing the WS immediately forces the SDK onto its REST fallback path
+ * so the existing REST-based mocks apply consistently in every
+ * environment (local dev console or a real cluster console).
+ */
+async function blockK8sWatchSockets(page: Page): Promise<void> {
+  await page.routeWebSocket('**/api/kubernetes/**', (ws) => {
+    ws.close();
+  });
+}
+
+/**
  * Intercept operator-detection CRD lookups so the UI thinks specific
  * operators are (or are not) installed.
  */
@@ -33,6 +50,8 @@ export async function mockOperatorDetection(
   page: Page,
   opts: MockOperatorOptions = {},
 ): Promise<void> {
+  await blockK8sWatchSockets(page);
+
   const { certManager = false, trustManager = false, externalSecrets = false, secretsStoreCSI = false } = opts;
 
   const routes: [string[], boolean][] = [
