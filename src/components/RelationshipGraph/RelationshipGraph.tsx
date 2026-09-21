@@ -40,19 +40,24 @@ const GROUP_COLUMN: Record<GraphNode['group'], number> = {
   workload: 3,
 };
 
+// Reuse the exact blue/mustard pair from the "Status" card's YAML syntax highlighting
+// (see YAML_KEY_COLOR / YAML_VALUE_COLOR near the top of ResourceInspect.tsx) so the graph
+// feels consistent with the rest of the inspect page instead of introducing new hues.
+const STATUS_YAML_BLUE = '#60a5fa';
+const STATUS_YAML_MUSTARD = '#eab308';
+
 /**
- * Branch colors per relationship category, using PatternFly's "nonstatus" categorical
- * design tokens (the same OCP console color system used elsewhere in this app, e.g. the
- * blue Card titles in ResourceInspect). These automatically adapt to the console's active
- * light/dark theme and deliberately avoid green/red/orange/grey since those are reserved
- * for the node status badges below.
+ * Branch colors per relationship category. Structural relationships (ownership/reference
+ * chains: root, upstream, downstream) use blue, matching the YAML "key" color; data-carrying
+ * nodes (secrets and the workloads that consume them) use mustard, matching the YAML "value"
+ * color.
  */
 const GROUP_COLOR: Record<GraphNode['group'], string> = {
-  upstream: 'var(--pf-t--global--color--nonstatus--blue--default)',
-  root: 'var(--pf-t--global--color--brand--default)',
-  downstream: 'var(--pf-t--global--color--nonstatus--purple--default)',
-  secret: 'var(--pf-t--global--color--nonstatus--teal--default)',
-  workload: 'var(--pf-t--global--color--nonstatus--yellow--default)',
+  upstream: STATUS_YAML_BLUE,
+  root: STATUS_YAML_BLUE,
+  downstream: STATUS_YAML_BLUE,
+  secret: STATUS_YAML_MUSTARD,
+  workload: STATUS_YAML_MUSTARD,
 };
 
 /** Marker (arrowhead) id per branch group -- SVG <marker> defs can't reference CSS vars for fill lookups by value, so key them by group name instead. */
@@ -247,10 +252,9 @@ export const RelationshipGraph: React.FC<RelationshipGraphProps> = ({
                 d={curveToPath(curve)}
                 fill="none"
                 stroke={color}
-                strokeWidth={2.25}
+                strokeWidth={2.5}
                 strokeLinecap="round"
                 markerEnd={`url(#${MARKER_ID[branchGroup]})`}
-                style={{ color, filter: 'drop-shadow(0 0 2px currentColor)' }}
               />
             );
           })}
