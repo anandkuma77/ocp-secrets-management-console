@@ -38,6 +38,7 @@ import {
   SecretProviderClassPodStatus,
 } from './components/crds';
 import { EventModel, getInvolvedObjectKind, K8sEvent } from './components/crds/Events';
+import { RelationshipGraphPanel } from './components/RelationshipGraph/RelationshipGraphPanel';
 import { dump as yamlDump } from 'js-yaml';
 
 // YAML syntax colors (on black background): blue (keys), mustard yellow (values)
@@ -885,6 +886,14 @@ export const ResourceInspect: React.FC = () => {
               {renderSecretProviderClassPodStatuses()}
             </GridItem>
           )}
+          <GridItem span={12} style={{ padding: '0rem 2rem' }}>
+            <RelationshipGraphPanel
+              kind={model.kind}
+              resource={resource}
+              namespace={isClusterScoped ? undefined : namespace || 'demo'}
+              name={name}
+            />
+          </GridItem>
         </Grid>
       </div>
     </>
