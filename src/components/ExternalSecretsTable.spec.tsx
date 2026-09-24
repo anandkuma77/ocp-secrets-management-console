@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ExternalSecretsTable } from './ExternalSecretsTable';
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
 import { useOptionalClusterListWatch } from '../hooks/useClusterWatchAllowed';
@@ -10,7 +11,11 @@ jest.mock('@openshift-console/dynamic-plugin-sdk', () => ({
 
 jest.mock('../hooks/useClusterWatchAllowed', () => {
   const actual = jest.requireActual('../hooks/useClusterWatchAllowed');
-  return { ...actual, useOptionalClusterListWatch: jest.fn() };
+  return {
+    ...actual,
+    useOptionalClusterListWatch: jest.fn(),
+    useDualScopeDeleteAllowed: jest.fn(() => () => true),
+  };
 });
 
 jest.mock('react-i18next', () => ({
@@ -19,6 +24,8 @@ jest.mock('react-i18next', () => ({
 
 const mockUseK8sWatchResource = useK8sWatchResource as jest.Mock;
 const mockUseOptionalClusterListWatch = useOptionalClusterListWatch as jest.Mock;
+const { useDualScopeDeleteAllowed } = jest.requireMock('../hooks/useClusterWatchAllowed');
+const mockUseDualScopeDeleteAllowed = useDualScopeDeleteAllowed as jest.Mock;
 
 const nsSecret = {
   kind: 'ExternalSecret',
@@ -43,5 +50,15 @@ describe('ExternalSecretsTable RBAC cluster watch gating', () => {
 
     expect(screen.getByText('es')).toBeInTheDocument();
     expect(screen.queryByTestId('external-secrets-table-error')).not.toBeInTheDocument();
+  });
+
+  it('omits Delete when externalsecret delete is denied', async () => {
+    const user = userEvent.setup();
+    mockUseDualScopeDeleteAllowed.mockReturnValue(() => false);
+
+    render(<ExternalSecretsTable selectedProject="app" />);
+
+    await user.click(screen.getByRole('button', { name: /kebab dropdown toggle/i }));
+    expect(screen.queryByRole('menuitem', { name: /Delete/ })).not.toBeInTheDocument();
   });
 });

@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { BundlesTable } from './BundlesTable';
 import { useOptionalClusterListWatch } from '../hooks/useClusterWatchAllowed';
 
@@ -6,9 +7,14 @@ jest.mock('@openshift-console/dynamic-plugin-sdk', () => ({
   consoleFetch: jest.fn(),
 }));
 
-jest.mock('../hooks/useClusterWatchAllowed', () => ({
-  useOptionalClusterListWatch: jest.fn(),
-}));
+jest.mock('../hooks/useClusterWatchAllowed', () => {
+  const actual = jest.requireActual('../hooks/useClusterWatchAllowed');
+  return {
+    ...actual,
+    useOptionalClusterListWatch: jest.fn(),
+    useClusterOnlyDeleteAllowed: jest.fn(() => true),
+  };
+});
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -17,6 +23,8 @@ jest.mock('react-i18next', () => ({
 }));
 
 const mockUseOptionalClusterListWatch = useOptionalClusterListWatch as jest.Mock;
+const { useClusterOnlyDeleteAllowed } = jest.requireMock('../hooks/useClusterWatchAllowed');
+const mockUseClusterOnlyDeleteAllowed = useClusterOnlyDeleteAllowed as jest.Mock;
 
 const setBundlesWatch = (
   data: unknown[],
@@ -326,6 +334,17 @@ describe('BundlesTable', () => {
 
       expect(screen.getByText('No trust bundles found')).toBeInTheDocument();
       expect(screen.queryByTestId('bundles-table-error')).not.toBeInTheDocument();
+    });
+
+    it('omits Delete when cluster bundle delete is denied', async () => {
+      const user = userEvent.setup();
+      setBundlesWatch(mockBundles, true, undefined);
+      mockUseClusterOnlyDeleteAllowed.mockReturnValue(false);
+
+      render(<BundlesTable selectedProject="all" />);
+
+      await user.click(screen.getAllByRole('button', { name: /kebab dropdown toggle/i })[0]);
+      expect(screen.queryByRole('menuitem', { name: /Delete/ })).not.toBeInTheDocument();
     });
   });
 

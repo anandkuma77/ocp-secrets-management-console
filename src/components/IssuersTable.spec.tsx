@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { IssuersTable } from './IssuersTable';
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
 import { useOptionalClusterListWatch } from '../hooks/useClusterWatchAllowed';
@@ -13,6 +14,7 @@ jest.mock('../hooks/useClusterWatchAllowed', () => {
   return {
     ...actual,
     useOptionalClusterListWatch: jest.fn(),
+    useDualScopeDeleteAllowed: jest.fn(() => () => true),
   };
 });
 
@@ -22,6 +24,8 @@ jest.mock('react-i18next', () => ({
 
 const mockUseK8sWatchResource = useK8sWatchResource as jest.Mock;
 const mockUseOptionalClusterListWatch = useOptionalClusterListWatch as jest.Mock;
+const { useDualScopeDeleteAllowed } = jest.requireMock('../hooks/useClusterWatchAllowed');
+const mockUseDualScopeDeleteAllowed = useDualScopeDeleteAllowed as jest.Mock;
 
 const namespaceIssuer = {
   metadata: { name: 'ns-issuer', namespace: 'app', creationTimestamp: '2026-01-01T00:00:00Z' },
@@ -45,5 +49,25 @@ describe('IssuersTable RBAC cluster watch gating', () => {
 
     expect(screen.getByText('ns-issuer')).toBeInTheDocument();
     expect(screen.queryByTestId('issuers-table-error')).not.toBeInTheDocument();
+  });
+
+  it('omits Delete when namespaced issuer delete is denied', async () => {
+    const user = userEvent.setup();
+    mockUseDualScopeDeleteAllowed.mockReturnValue(() => false);
+
+    render(<IssuersTable selectedProject="app" />);
+
+    await user.click(screen.getByRole('button', { name: /kebab dropdown toggle/i }));
+    expect(screen.queryByRole('menuitem', { name: /Delete/ })).not.toBeInTheDocument();
+  });
+
+  it('shows Delete when namespaced issuer delete is allowed', async () => {
+    const user = userEvent.setup();
+    mockUseDualScopeDeleteAllowed.mockReturnValue(() => true);
+
+    render(<IssuersTable selectedProject="app" />);
+
+    await user.click(screen.getByRole('button', { name: /kebab dropdown toggle/i }));
+    expect(screen.getByRole('menuitem', { name: /Delete/ })).toBeInTheDocument();
   });
 });

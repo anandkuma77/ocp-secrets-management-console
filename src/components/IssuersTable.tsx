@@ -13,6 +13,7 @@ import {
   useOptionalClusterListWatch,
   combineDualListWatchLoaded,
   combineDualListWatchError,
+  useDualScopeDeleteAllowed,
 } from '../hooks/useClusterWatchAllowed';
 
 const getIssuerType = (issuer: Issuer): string => {
@@ -155,6 +156,7 @@ export const IssuersTable: React.FC<IssuersTableProps> = ({ selectedProject }) =
 
   const loaded = combineDualListWatchLoaded(issuersLoaded, clusterIssuersWatch);
   const loadError = combineDualListWatchError(issuersError, clusterIssuersWatch);
+  const canDeleteRow = useDualScopeDeleteAllowed(IssuerModel, ClusterIssuerModel, selectedProject);
 
   const columns = [
     { title: t('Name'), width: 15 },
@@ -212,7 +214,7 @@ export const IssuersTable: React.FC<IssuersTableProps> = ({ selectedProject }) =
                 label: t('Inspect {{kind}}', { kind: issuerKind }),
                 onClick: () => handleInspect(issuer),
               },
-              ...(deleteEnabled
+              ...(deleteEnabled && canDeleteRow(issuer.metadata.namespace)
                 ? [
                     {
                       key: 'delete',
@@ -226,7 +228,7 @@ export const IssuersTable: React.FC<IssuersTableProps> = ({ selectedProject }) =
         ],
       };
     });
-  }, [issuers, clusterIssuers, loaded, t, deleteEnabled]);
+  }, [issuers, clusterIssuers, loaded, t, deleteEnabled, canDeleteRow]);
 
   return (
     <>

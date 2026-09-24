@@ -9,7 +9,10 @@ import { RowActionsMenu } from './RowActionsMenu';
 import { consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { BundleModel, Bundle, BundleSource } from './crds';
 import { useDeleteEnabled } from '../hooks/usePluginConfig';
-import { useOptionalClusterListWatch } from '../hooks/useClusterWatchAllowed';
+import {
+  useOptionalClusterListWatch,
+  useClusterOnlyDeleteAllowed,
+} from '../hooks/useClusterWatchAllowed';
 
 const getSyncedStatus = (bundle: Bundle) => {
   const syncedCondition = bundle.status?.conditions?.find(
@@ -159,6 +162,7 @@ export const BundlesTable: React.FC<BundlesTableProps> = ({ selectedProject }) =
   const bundles = bundlesWatch.data;
   const loaded = bundlesWatch.loaded;
   const loadError = bundlesWatch.error as { message?: string } | undefined;
+  const canDelete = useClusterOnlyDeleteAllowed(BundleModel);
 
   const columns = [
     { title: t('Name'), width: 16 },
@@ -200,7 +204,7 @@ export const BundlesTable: React.FC<BundlesTableProps> = ({ selectedProject }) =
                 label: t('Inspect {{kind}}', { kind: t('Bundle') }),
                 onClick: () => handleInspect(bundle),
               },
-              ...(deleteEnabled
+              ...(deleteEnabled && canDelete
                 ? [
                     {
                       key: 'delete',
@@ -214,7 +218,7 @@ export const BundlesTable: React.FC<BundlesTableProps> = ({ selectedProject }) =
         ],
       };
     });
-  }, [bundles, loaded, t, deleteEnabled]);
+  }, [bundles, loaded, t, deleteEnabled, canDelete]);
 
   return (
     <>
