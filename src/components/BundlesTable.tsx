@@ -6,9 +6,10 @@ import { CheckCircleIcon, ExclamationCircleIcon, TimesCircleIcon } from '@patter
 import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { RowActionsMenu } from './RowActionsMenu';
-import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
+import { consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { BundleModel, Bundle, BundleSource } from './crds';
 import { useDeleteEnabled } from '../hooks/usePluginConfig';
+import { useOptionalClusterListWatch } from '../hooks/useClusterWatchAllowed';
 
 const getSyncedStatus = (bundle: Bundle) => {
   const syncedCondition = bundle.status?.conditions?.find(
@@ -154,10 +155,10 @@ export const BundlesTable: React.FC<BundlesTableProps> = ({ selectedProject }) =
 
   // Bundles are cluster-scoped, so no namespace filter is needed for the watch.
   // We still accept selectedProject for UI consistency but it won't filter results.
-  const [bundles, loaded, loadError] = useK8sWatchResource<Bundle[]>({
-    groupVersionKind: BundleModel,
-    isList: true,
-  });
+  const bundlesWatch = useOptionalClusterListWatch<Bundle>(BundleModel);
+  const bundles = bundlesWatch.data;
+  const loaded = bundlesWatch.loaded;
+  const loadError = bundlesWatch.error as { message?: string } | undefined;
 
   const columns = [
     { title: t('Name'), width: 16 },

@@ -9,6 +9,11 @@ import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { SecretStoreModel, ClusterSecretStoreModel, SecretStore } from './crds';
 import { useDeleteEnabled } from '../hooks/usePluginConfig';
+import {
+  useOptionalClusterListWatch,
+  combineDualListWatchLoaded,
+  combineDualListWatchError,
+} from '../hooks/useClusterWatchAllowed';
 
 const getProviderType = (secretStore: SecretStore): string => {
   const provider = secretStore.spec?.provider;
@@ -189,14 +194,11 @@ export const SecretStoresTable: React.FC<SecretStoresTableProps> = ({ selectedPr
     isList: true,
   });
 
-  const [clusterSecretStores, clusterSecretStoresLoaded, clusterSecretStoresError] =
-    useK8sWatchResource<SecretStore[]>({
-      groupVersionKind: ClusterSecretStoreModel,
-      isList: true,
-    });
+  const clusterSecretStoresWatch = useOptionalClusterListWatch<SecretStore>(ClusterSecretStoreModel);
+  const clusterSecretStores = clusterSecretStoresWatch.data;
 
-  const loaded = secretStoresLoaded && clusterSecretStoresLoaded;
-  const loadError = secretStoresError || clusterSecretStoresError;
+  const loaded = combineDualListWatchLoaded(secretStoresLoaded, clusterSecretStoresWatch);
+  const loadError = combineDualListWatchError(secretStoresError, clusterSecretStoresWatch);
 
   const columns = [
     { title: t('Name'), width: 15 },

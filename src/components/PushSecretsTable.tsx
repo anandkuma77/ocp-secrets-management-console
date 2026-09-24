@@ -21,6 +21,11 @@ import {
   isClusterPushSecret,
 } from './crds';
 import { useDeleteEnabled } from '../hooks/usePluginConfig';
+import {
+  useOptionalClusterListWatch,
+  combineDualListWatchLoaded,
+  combineDualListWatchError,
+} from '../hooks/useClusterWatchAllowed';
 
 const getPushSecretStatus = (pushSecret: PushSecretResource) => {
   if (!pushSecret.status?.conditions) {
@@ -131,15 +136,12 @@ export const PushSecretsTable: React.FC<PushSecretsTableProps> = ({ selectedProj
     isList: true,
   });
 
-  // Watch ClusterPushSecrets (cluster-scoped)
-  const [clusterPushSecrets, clusterPushSecretsLoaded, clusterPushSecretsError] =
-    useK8sWatchResource<ClusterPushSecret[]>({
-      groupVersionKind: ClusterPushSecretModel,
-      isList: true,
-    });
+  const clusterPushSecretsWatch =
+    useOptionalClusterListWatch<ClusterPushSecret>(ClusterPushSecretModel);
+  const clusterPushSecrets = clusterPushSecretsWatch.data;
 
-  const loaded = pushSecretsLoaded && clusterPushSecretsLoaded;
-  const loadError = pushSecretsError || clusterPushSecretsError;
+  const loaded = combineDualListWatchLoaded(pushSecretsLoaded, clusterPushSecretsWatch);
+  const loadError = combineDualListWatchError(pushSecretsError, clusterPushSecretsWatch);
 
   const columns = [
     { title: t('Name'), width: 15 },
