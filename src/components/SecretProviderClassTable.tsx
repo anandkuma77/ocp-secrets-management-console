@@ -18,6 +18,7 @@ import {
   SecretProviderClass,
   SecretProviderClassPodStatus,
 } from './crds';
+import { useNamespacedWatchAllowed } from '../hooks/useClusterWatchAllowed';
 
 const getProviderIcon = (provider: string) => {
   switch (provider.toLowerCase()) {
@@ -171,24 +172,51 @@ export const SecretProviderClassTable: React.FC<SecretProviderClassTableProps> =
     });
   };
 
+  const namespace = selectedProject === 'all' ? undefined : selectedProject;
+  const { allowed: nsWatchAllowed, loading: nsAccessLoading } = useNamespacedWatchAllowed(
+    SecretProviderClassModel,
+    namespace ?? '',
+  );
+  const canWatchInProject = !namespace || (nsWatchAllowed && !nsAccessLoading);
+
   const [secretProviderClasses, spcLoaded, spcLoadError] = useK8sWatchResource<
     SecretProviderClass[]
-  >({
-    groupVersionKind: SecretProviderClassModel,
-    namespace: selectedProject === 'all' ? undefined : selectedProject,
-    isList: true,
-  });
+  >(
+    canWatchInProject
+      ? {
+          groupVersionKind: SecretProviderClassModel,
+          namespace,
+          isList: true,
+        }
+      : namespace
+        ? null
+        : {
+            groupVersionKind: SecretProviderClassModel,
+            namespace: undefined,
+            isList: true,
+          },
+  );
 
   const [podStatuses, podStatusesLoaded, podStatusesLoadError] = useK8sWatchResource<
     SecretProviderClassPodStatus[]
-  >({
-    groupVersionKind: SecretProviderClassPodStatusModel,
-    namespace: selectedProject === 'all' ? undefined : selectedProject,
-    isList: true,
-  });
+  >(
+    canWatchInProject
+      ? {
+          groupVersionKind: SecretProviderClassPodStatusModel,
+          namespace,
+          isList: true,
+        }
+      : namespace
+        ? null
+        : {
+            groupVersionKind: SecretProviderClassPodStatusModel,
+            namespace: undefined,
+            isList: true,
+          },
+  );
 
   const loaded = spcLoaded && podStatusesLoaded;
-  const loadError = spcLoadError || podStatusesLoadError;
+  const loadError = canWatchInProject ? spcLoadError || podStatusesLoadError : undefined;
 
   const columns = [
     { title: t('Name'), width: 15 },

@@ -7,6 +7,7 @@ import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
+import { useClusterWatchAllowed } from '../hooks/useClusterWatchAllowed';
 import {
   GENERATOR_KIND_DEFS,
   getGeneratorModel,
@@ -83,11 +84,20 @@ interface GeneratorKindWatchProps {
 }
 
 const GeneratorKindWatch: React.FC<GeneratorKindWatchProps> = ({ def, namespace, onUpdate }) => {
-  const [items, loaded, error] = useK8sWatchResource<GeneratorResource[]>({
-    groupVersionKind: getGeneratorModel(def.kind),
-    namespace: def.clusterScoped ? undefined : namespace,
-    isList: true,
-  });
+  const model = getGeneratorModel(def.kind);
+  const { allowed: clusterAllowed, loading: clusterAccessLoading } = useClusterWatchAllowed(
+    def.clusterScoped ? model : null,
+  );
+  const watchEnabled = !def.clusterScoped || (clusterAllowed && !clusterAccessLoading);
+  const [items, loaded, error] = useK8sWatchResource<GeneratorResource[]>(
+    watchEnabled
+      ? {
+          groupVersionKind: model,
+          namespace: def.clusterScoped ? undefined : namespace,
+          isList: true,
+        }
+      : null,
+  );
 
   React.useEffect(() => {
     onUpdate({

@@ -3,11 +3,20 @@ import userEvent from '@testing-library/user-event';
 import { GeneratorsTable } from './GeneratorsTable';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { GENERATOR_KIND_DEFS } from './crds';
+import { useClusterWatchAllowed } from '../hooks/useClusterWatchAllowed';
 
 jest.mock('@openshift-console/dynamic-plugin-sdk', () => ({
   useK8sWatchResource: jest.fn(),
   consoleFetch: jest.fn(),
 }));
+
+jest.mock('../hooks/useClusterWatchAllowed', () => {
+  const actual = jest.requireActual('../hooks/useClusterWatchAllowed');
+  return {
+    ...actual,
+    useClusterWatchAllowed: jest.fn(() => ({ allowed: true, loading: false })),
+  };
+});
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -23,6 +32,7 @@ jest.mock('react-i18next', () => ({
 
 const mockUseK8sWatchResource = useK8sWatchResource as jest.Mock;
 const mockConsoleFetch = consoleFetch as jest.Mock;
+const mockUseClusterWatchAllowed = useClusterWatchAllowed as jest.Mock;
 
 const mockPasswords = [
   {
@@ -96,16 +106,22 @@ const mockFailedPassword = {
 };
 
 function mockWatches(dataByKind: Record<string, unknown[]> = {}) {
-  mockUseK8sWatchResource.mockImplementation((opts: { groupVersionKind?: { kind?: string } }) => {
-    const kind = opts.groupVersionKind?.kind || '';
-    return [dataByKind[kind] || [], true, undefined];
-  });
+  mockUseK8sWatchResource.mockImplementation(
+    (opts: { groupVersionKind?: { kind?: string } } | null) => {
+      if (!opts) {
+        return [undefined, true, undefined];
+      }
+      const kind = opts.groupVersionKind?.kind || '';
+      return [dataByKind[kind] || [], true, undefined];
+    },
+  );
 }
 
 describe('GeneratorsTable', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockConsoleFetch.mockReset();
+    mockUseClusterWatchAllowed.mockImplementation(() => ({ allowed: true, loading: false }));
   });
 
   describe('Loading State', () => {
@@ -115,6 +131,22 @@ describe('GeneratorsTable', () => {
       const { container } = render(<GeneratorsTable selectedProject="all" />);
 
       expect(container.querySelector('[data-test="generators-table-loading"]')).toBeInTheDocument();
+    });
+  });
+
+  describe('RBAC cluster watch gating', () => {
+    it('still lists namespace generators when cluster generator watch is denied', async () => {
+      mockUseClusterWatchAllowed.mockImplementation((model) =>
+        model?.kind === 'ClusterGenerator'
+          ? { allowed: false, loading: false }
+          : { allowed: true, loading: false },
+      );
+      mockWatches({ Password: mockPasswords });
+
+      render(<GeneratorsTable selectedProject="app" />);
+
+      expect(await screen.findByText('db-password')).toBeInTheDocument();
+      expect(screen.queryByTestId('generators-table-error')).not.toBeInTheDocument();
     });
   });
 
@@ -149,16 +181,21 @@ describe('GeneratorsTable', () => {
     });
 
     it('still renders generators when some kinds are missing CRDs', async () => {
-      mockUseK8sWatchResource.mockImplementation((opts: { groupVersionKind?: { kind?: string } }) => {
-        const kind = opts.groupVersionKind?.kind || '';
-        if (kind === 'Password') {
-          return [mockPasswords, true, undefined];
-        }
-        if (kind === 'Fake') {
-          return [[], true, { message: 'the server could not find the requested resource' }];
-        }
-        return [[], true, undefined];
-      });
+      mockUseK8sWatchResource.mockImplementation(
+        (opts: { groupVersionKind?: { kind?: string } } | null) => {
+          if (!opts) {
+            return [undefined, true, undefined];
+          }
+          const kind = opts.groupVersionKind?.kind || '';
+          if (kind === 'Password') {
+            return [mockPasswords, true, undefined];
+          }
+          if (kind === 'Fake') {
+            return [[], true, { message: 'the server could not find the requested resource' }];
+          }
+          return [[], true, undefined];
+        },
+      );
 
       render(<GeneratorsTable selectedProject="all" />);
 

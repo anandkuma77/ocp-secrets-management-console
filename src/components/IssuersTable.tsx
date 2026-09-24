@@ -8,6 +8,11 @@ import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { IssuerModel, ClusterIssuerModel, Issuer } from './crds';
+import {
+  useOptionalClusterListWatch,
+  combineDualListWatchLoaded,
+  combineDualListWatchError,
+} from '../hooks/useClusterWatchAllowed';
 
 const getIssuerType = (issuer: Issuer): string => {
   if (issuer.spec.acme) return 'ACME';
@@ -143,15 +148,11 @@ export const IssuersTable: React.FC<IssuersTableProps> = ({ selectedProject }) =
     isList: true,
   });
 
-  const [clusterIssuers, clusterIssuersLoaded, clusterIssuersError] = useK8sWatchResource<Issuer[]>(
-    {
-      groupVersionKind: ClusterIssuerModel,
-      isList: true,
-    },
-  );
+  const clusterIssuersWatch = useOptionalClusterListWatch<Issuer>(ClusterIssuerModel);
+  const clusterIssuers = clusterIssuersWatch.data;
 
-  const loaded = issuersLoaded && clusterIssuersLoaded;
-  const loadError = issuersError || clusterIssuersError;
+  const loaded = combineDualListWatchLoaded(issuersLoaded, clusterIssuersWatch);
+  const loadError = combineDualListWatchError(issuersError, clusterIssuersWatch);
 
   const columns = [
     { title: t('Name'), width: 15 },

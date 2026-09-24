@@ -20,6 +20,11 @@ import {
   ExternalSecretResource,
   isClusterExternalSecret,
 } from './crds';
+import {
+  useOptionalClusterListWatch,
+  combineDualListWatchLoaded,
+  combineDualListWatchError,
+} from '../hooks/useClusterWatchAllowed';
 
 /** Parse Kubernetes/Go duration string (e.g. "1h", "30m", "1h30m") to milliseconds */
 function parseDurationMs(duration: string): number {
@@ -213,24 +218,18 @@ export const ExternalSecretsTable: React.FC<ExternalSecretsTableProps> = ({ sele
     isList: true,
   });
 
-  // Watch ClusterExternalSecrets (cluster-scoped)
-  const [clusterExternalSecrets, clusterExternalSecretsLoaded, clusterExternalSecretsError] =
-    useK8sWatchResource<ClusterExternalSecret[]>({
-      groupVersionKind: ClusterExternalSecretModel,
-      isList: true,
-    });
+  const clusterExternalSecretsWatch =
+    useOptionalClusterListWatch<ClusterExternalSecret>(ClusterExternalSecretModel);
+  const clusterExternalSecrets = clusterExternalSecretsWatch.data;
 
-  // Combine both resource types
   const allSecrets = React.useMemo(() => {
     const combined: ExternalSecretResource[] = [...(externalSecrets || [])];
-    if (clusterExternalSecrets) {
-      combined.push(...clusterExternalSecrets);
-    }
+    combined.push(...clusterExternalSecrets);
     return combined;
   }, [externalSecrets, clusterExternalSecrets]);
 
-  const loaded = externalSecretsLoaded && clusterExternalSecretsLoaded;
-  const loadError = externalSecretsError || clusterExternalSecretsError;
+  const loaded = combineDualListWatchLoaded(externalSecretsLoaded, clusterExternalSecretsWatch);
+  const loadError = combineDualListWatchError(externalSecretsError, clusterExternalSecretsWatch);
 
   const columns = [
     { title: t('Name'), width: 15 },
