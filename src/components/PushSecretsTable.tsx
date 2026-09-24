@@ -24,6 +24,7 @@ import {
   useOptionalClusterListWatch,
   combineDualListWatchLoaded,
   combineDualListWatchError,
+  useDualScopeDeleteAllowed,
 } from '../hooks/useClusterWatchAllowed';
 
 const getPushSecretStatus = (pushSecret: PushSecretResource) => {
@@ -140,6 +141,11 @@ export const PushSecretsTable: React.FC<PushSecretsTableProps> = ({ selectedProj
 
   const loaded = combineDualListWatchLoaded(pushSecretsLoaded, clusterPushSecretsWatch);
   const loadError = combineDualListWatchError(pushSecretsError, clusterPushSecretsWatch);
+  const canDeleteRow = useDualScopeDeleteAllowed(
+    PushSecretModel,
+    ClusterPushSecretModel,
+    selectedProject,
+  );
 
   const columns = [
     { title: t('Name'), width: 15 },
@@ -220,17 +226,21 @@ export const PushSecretsTable: React.FC<PushSecretsTableProps> = ({ selectedProj
                   }
                 },
               },
-              {
-                key: 'delete',
-                label: t('Delete {{kind}}', { kind: resourceKind }),
-                onClick: () => openDeleteModal(pushSecret),
-              },
+              ...(canDeleteRow(isCluster ? undefined : pushSecret.metadata.namespace)
+                ? [
+                    {
+                      key: 'delete',
+                      label: t('Delete {{kind}}', { kind: resourceKind }),
+                      onClick: () => openDeleteModal(pushSecret),
+                    },
+                  ]
+                : []),
             ]}
           />,
         ],
       };
     });
-  }, [pushSecrets, clusterPushSecrets, loaded, t]);
+  }, [pushSecrets, clusterPushSecrets, loaded, t, canDeleteRow]);
 
   const getErrorMessage = () => {
     if (loadError?.message?.includes('no matches for kind')) {

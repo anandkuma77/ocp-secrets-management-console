@@ -7,7 +7,12 @@ import { ResourceTable } from './ResourceTable';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
-import { useClusterWatchAllowed } from '../hooks/useClusterWatchAllowed';
+import {
+  useClusterWatchAllowed,
+  useClusterDeleteAllowed,
+  useNamespacedDeleteAllowed,
+  isDeleteAllowed,
+} from '../hooks/useClusterWatchAllowed';
 import {
   GENERATOR_KIND_DEFS,
   getGeneratorModel,
@@ -83,6 +88,36 @@ interface GeneratorKindWatchProps {
   onUpdate: (result: KindWatchResult) => void;
 }
 
+interface GeneratorKindDeleteAccessProps {
+  def: GeneratorKindDef;
+  namespace?: string;
+  onUpdate: (kind: string, allowed: boolean) => void;
+}
+
+const GeneratorKindDeleteAccess: React.FC<GeneratorKindDeleteAccessProps> = ({
+  def,
+  namespace,
+  onUpdate,
+}) => {
+  const model = getGeneratorModel(def.kind);
+  const clusterDelete = useClusterDeleteAllowed(def.clusterScoped ? model : null);
+  const namespacedDelete = useNamespacedDeleteAllowed(
+    def.clusterScoped ? null : model,
+    namespace || '',
+  );
+  const allowed = def.clusterScoped
+    ? isDeleteAllowed(clusterDelete)
+    : namespace
+      ? isDeleteAllowed(namespacedDelete)
+      : false;
+
+  React.useLayoutEffect(() => {
+    onUpdate(def.kind, allowed);
+  }, [def.kind, allowed, onUpdate]);
+
+  return null;
+};
+
 const GeneratorKindWatch: React.FC<GeneratorKindWatchProps> = ({ def, namespace, onUpdate }) => {
   const model = getGeneratorModel(def.kind);
   const { allowed: clusterAllowed, loading: clusterAccessLoading } = useClusterWatchAllowed(
@@ -123,6 +158,7 @@ interface GeneratorsTableProps {
 export const GeneratorsTable: React.FC<GeneratorsTableProps> = ({ selectedProject }) => {
   const { t } = useTranslation('plugin__ocp-secrets-management');
   const [watchState, setWatchState] = React.useState<Record<string, KindWatchResult>>({});
+  const [deleteAllowedByKind, setDeleteAllowedByKind] = React.useState<Record<string, boolean>>({});
   const [deleteModal, setDeleteModal] = React.useState<{
     isOpen: boolean;
     generator: GeneratorResource | null;
@@ -134,6 +170,15 @@ export const GeneratorsTable: React.FC<GeneratorsTableProps> = ({ selectedProjec
     isDeleting: false,
     error: null,
   });
+
+  const handleDeleteAccessUpdate = React.useCallback((kind: string, allowed: boolean) => {
+    setDeleteAllowedByKind((prev) => {
+      if (prev[kind] === allowed) {
+        return prev;
+      }
+      return { ...prev, [kind]: allowed };
+    });
+  }, []);
 
   const handleWatchUpdate = React.useCallback((result: KindWatchResult) => {
     setWatchState((prev) => {
@@ -243,6 +288,8 @@ export const GeneratorsTable: React.FC<GeneratorsTableProps> = ({ selectedProjec
       const generatorId = `${generator.kind}-${namespaceLabel}-${generator.metadata.name}`;
       const conditionStatus = getGeneratorStatus(generator);
       const generatorKind = generator.kind || t('Generator');
+      const kindKey = generator.kind || 'Password';
+      const showDelete = deleteAllowedByKind[kindKey] === true;
 
       return {
         cells: [
@@ -267,27 +314,33 @@ export const GeneratorsTable: React.FC<GeneratorsTableProps> = ({ selectedProjec
                 label: t('Inspect {{kind}}', { kind: generatorKind }),
                 onClick: () => handleInspect(generator),
               },
-              {
-                key: 'delete',
-                label: t('Delete {{kind}}', { kind: generatorKind }),
-                onClick: () => openDeleteModal(generator),
-              },
+              ...(showDelete
+                ? [
+                    {
+                      key: 'delete',
+                      label: t('Delete {{kind}}', { kind: generatorKind }),
+                      onClick: () => openDeleteModal(generator),
+                    },
+                  ]
+                : []),
             ]}
           />,
         ],
       };
     });
-  }, [loaded, watchState, t]);
+  }, [loaded, watchState, deleteAllowedByKind, t]);
 
   return (
     <>
       {GENERATOR_KIND_DEFS.map((def) => (
-        <GeneratorKindWatch
-          key={def.kind}
-          def={def}
-          namespace={namespace}
-          onUpdate={handleWatchUpdate}
-        />
+        <React.Fragment key={def.kind}>
+          <GeneratorKindDeleteAccess
+            def={def}
+            namespace={namespace}
+            onUpdate={handleDeleteAccessUpdate}
+          />
+          <GeneratorKindWatch def={def} namespace={namespace} onUpdate={handleWatchUpdate} />
+        </React.Fragment>
       ))}
       <ResourceTable
         columns={columns}

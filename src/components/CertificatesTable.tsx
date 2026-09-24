@@ -13,6 +13,7 @@ import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { RowActionsMenu } from './RowActionsMenu';
 import { useK8sWatchResource, consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { CertificateModel, Certificate } from './crds';
+import { useNamespacedOnlyDeleteAllowed } from '../hooks/useClusterWatchAllowed';
 
 const getConditionStatus = (certificate: Certificate) => {
   const readyCondition = certificate.status?.conditions?.find(
@@ -168,6 +169,7 @@ export const CertificatesTable: React.FC<CertificatesTableProps> = ({ selectedPr
     namespace: selectedProject === 'all' ? undefined : selectedProject,
     isList: true,
   });
+  const canDelete = useNamespacedOnlyDeleteAllowed(CertificateModel, selectedProject);
 
   const columns = [
     { title: t('Name'), width: 15 },
@@ -223,17 +225,21 @@ export const CertificatesTable: React.FC<CertificatesTableProps> = ({ selectedPr
                 label: t('Inspect {{kind}}', { kind: t('Certificate') }),
                 onClick: () => handleInspect(cert),
               },
-              {
-                key: 'delete',
-                label: t('Delete {{kind}}', { kind: t('Certificate') }),
-                onClick: () => handleDelete(cert),
-              },
+              ...(canDelete
+                ? [
+                    {
+                      key: 'delete',
+                      label: t('Delete {{kind}}', { kind: t('Certificate') }),
+                      onClick: () => handleDelete(cert),
+                    },
+                  ]
+                : []),
             ]}
           />,
         ],
       };
     });
-  }, [certificates, loaded, t]);
+  }, [certificates, loaded, t, canDelete]);
 
   return (
     <>

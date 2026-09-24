@@ -18,7 +18,10 @@ import {
   SecretProviderClass,
   SecretProviderClassPodStatus,
 } from './crds';
-import { useNamespacedWatchAllowed } from '../hooks/useClusterWatchAllowed';
+import {
+  useNamespacedWatchAllowed,
+  useNamespacedOnlyDeleteAllowed,
+} from '../hooks/useClusterWatchAllowed';
 
 const getProviderIcon = (provider: string) => {
   switch (provider.toLowerCase()) {
@@ -178,6 +181,7 @@ export const SecretProviderClassTable: React.FC<SecretProviderClassTableProps> =
     namespace ?? '',
   );
   const canWatchInProject = !namespace || (nsWatchAllowed && !nsAccessLoading);
+  const canDelete = useNamespacedOnlyDeleteAllowed(SecretProviderClassModel, selectedProject);
 
   const [secretProviderClasses, spcLoaded, spcLoadError] = useK8sWatchResource<
     SecretProviderClass[]
@@ -288,17 +292,21 @@ export const SecretProviderClassTable: React.FC<SecretProviderClassTableProps> =
                   window.location.href = `/secrets-management/inspect/secretproviderclasses/${spc.metadata.namespace}/${spc.metadata.name}`;
                 },
               },
-              {
-                key: 'delete',
-                label: t('Delete {{kind}}', { kind: t('SecretProviderClass') }),
-                onClick: () => openDeleteModal(spc),
-              },
+              ...(canDelete
+                ? [
+                    {
+                      key: 'delete',
+                      label: t('Delete {{kind}}', { kind: t('SecretProviderClass') }),
+                      onClick: () => openDeleteModal(spc),
+                    },
+                  ]
+                : []),
             ]}
           />,
         ],
       };
     });
-  }, [secretProviderClasses, podStatuses, loaded, t]);
+  }, [secretProviderClasses, podStatuses, loaded, t, canDelete]);
 
   return (
     <>

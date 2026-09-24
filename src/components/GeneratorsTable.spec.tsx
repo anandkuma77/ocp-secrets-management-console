@@ -15,6 +15,8 @@ jest.mock('../hooks/useClusterWatchAllowed', () => {
   return {
     ...actual,
     useClusterWatchAllowed: jest.fn(() => ({ allowed: true, loading: false })),
+    useClusterDeleteAllowed: jest.fn(() => ({ allowed: true, loading: false })),
+    useNamespacedDeleteAllowed: jest.fn(() => ({ allowed: true, loading: false })),
   };
 });
 
@@ -122,6 +124,11 @@ describe('GeneratorsTable', () => {
     jest.clearAllMocks();
     mockConsoleFetch.mockReset();
     mockUseClusterWatchAllowed.mockImplementation(() => ({ allowed: true, loading: false }));
+    const { useNamespacedDeleteAllowed, useClusterDeleteAllowed } = jest.requireMock(
+      '../hooks/useClusterWatchAllowed',
+    );
+    (useNamespacedDeleteAllowed as jest.Mock).mockReturnValue({ allowed: true, loading: false });
+    (useClusterDeleteAllowed as jest.Mock).mockReturnValue({ allowed: true, loading: false });
   });
 
   describe('Loading State', () => {
@@ -131,6 +138,21 @@ describe('GeneratorsTable', () => {
       const { container } = render(<GeneratorsTable selectedProject="all" />);
 
       expect(container.querySelector('[data-test="generators-table-loading"]')).toBeInTheDocument();
+    });
+  });
+
+  describe('RBAC delete gating', () => {
+    it('omits Delete when password generator delete is denied', async () => {
+      const user = userEvent.setup();
+      const { useNamespacedDeleteAllowed } = jest.requireMock('../hooks/useClusterWatchAllowed');
+      (useNamespacedDeleteAllowed as jest.Mock).mockReturnValue({ allowed: false, loading: false });
+      mockWatches({ Password: mockPasswords });
+
+      render(<GeneratorsTable selectedProject="app" />);
+
+      const kebabs = await screen.findAllByRole('button', { name: /kebab dropdown toggle/i });
+      await user.click(kebabs[0]);
+      expect(screen.queryByRole('menuitem', { name: /Delete/ })).not.toBeInTheDocument();
     });
   });
 
@@ -429,7 +451,7 @@ describe('GeneratorsTable', () => {
       const user = userEvent.setup();
       mockWatches({ Password: [mockPasswords[0]] });
 
-      render(<GeneratorsTable selectedProject="all" />);
+      render(<GeneratorsTable selectedProject="app" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
       expect(screen.getByRole('menuitem', { name: 'Inspect Password' })).toBeInTheDocument();
@@ -444,7 +466,7 @@ describe('GeneratorsTable', () => {
         text: async () => '',
       });
 
-      render(<GeneratorsTable selectedProject="all" />);
+      render(<GeneratorsTable selectedProject="app" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
       await user.click(screen.getByRole('menuitem', { name: 'Delete Password' }));
@@ -500,7 +522,7 @@ describe('GeneratorsTable', () => {
         text: async () => 'forbidden',
       });
 
-      render(<GeneratorsTable selectedProject="all" />);
+      render(<GeneratorsTable selectedProject="app" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
       await user.click(screen.getByRole('menuitem', { name: 'Delete Password' }));
@@ -514,7 +536,7 @@ describe('GeneratorsTable', () => {
       const user = userEvent.setup();
       mockWatches({ Password: [mockPasswords[0]] });
 
-      render(<GeneratorsTable selectedProject="all" />);
+      render(<GeneratorsTable selectedProject="app" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
       await user.click(screen.getByRole('menuitem', { name: 'Delete Password' }));
@@ -742,7 +764,7 @@ describe('GeneratorsTable', () => {
         text: async () => '',
       });
 
-      render(<GeneratorsTable selectedProject="all" />);
+      render(<GeneratorsTable selectedProject="test-ns" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
       await user.click(screen.getByRole('menuitem', { name: 'Delete Webhook' }));
@@ -774,7 +796,7 @@ describe('GeneratorsTable', () => {
         text: async () => '',
       });
 
-      render(<GeneratorsTable selectedProject="all" />);
+      render(<GeneratorsTable selectedProject="vault-ns" />);
 
       await user.click(await screen.findByRole('button', { name: /kebab dropdown toggle/i }));
       await user.click(screen.getByRole('menuitem', { name: 'Delete VaultDynamicSecret' }));

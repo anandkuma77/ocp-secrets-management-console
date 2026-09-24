@@ -2,8 +2,12 @@ import { renderHook } from '@testing-library/react';
 import {
   useClusterWatchAllowed,
   useNamespacedWatchAllowed,
+  useClusterDeleteAllowed,
+  useNamespacedDeleteAllowed,
   getClusterWatchAccessReviewAttributes,
   getNamespacedWatchAccessReviewAttributes,
+  getClusterDeleteAccessReviewAttributes,
+  getNamespacedDeleteAccessReviewAttributes,
 } from './useClusterWatchAllowed';
 import { useAccessReview } from '@openshift-console/dynamic-plugin-sdk';
 import { ClusterIssuerModel, IssuerModel } from '../components/crds/Issuer';
@@ -83,6 +87,96 @@ describe('useClusterWatchAllowed', () => {
         undefined,
         true,
       );
+    });
+  });
+
+  describe('getClusterDeleteAccessReviewAttributes', () => {
+    it('uses plural API resource name for cluster issuer delete', () => {
+      const attrs = getClusterDeleteAccessReviewAttributes(ClusterIssuerModel);
+      expect(attrs).toEqual({
+        group: 'cert-manager.io',
+        resource: 'clusterissuers',
+        verb: 'delete',
+      });
+      expect(attrs?.resource).not.toBe('ClusterIssuer');
+    });
+
+    it('uses plural API resource name for namespaced issuer delete', () => {
+      const attrs = getNamespacedDeleteAccessReviewAttributes(IssuerModel, 'app');
+      expect(attrs).toEqual({
+        group: 'cert-manager.io',
+        resource: 'issuers',
+        verb: 'delete',
+        namespace: 'app',
+      });
+    });
+  });
+
+  describe('useClusterDeleteAllowed', () => {
+    it('reports cluster delete disallowed when access review denies', () => {
+      mockUseAccessReview.mockImplementation((attrs) => {
+        if (attrs.resource === 'clusterissuers' && attrs.verb === 'delete') {
+          return [false, false];
+        }
+        return [true, false];
+      });
+
+      const { result } = renderHook(() => useClusterDeleteAllowed(ClusterIssuerModel));
+
+      expect(result.current.allowed).toBe(false);
+      expect(result.current.loading).toBe(false);
+      expect(mockUseAccessReview).toHaveBeenCalledWith(
+        {
+          group: 'cert-manager.io',
+          resource: 'clusterissuers',
+          verb: 'delete',
+        },
+        undefined,
+        false,
+      );
+    });
+
+    it('reports loading while cluster delete access review is pending', () => {
+      mockUseAccessReview.mockReturnValue([false, true]);
+
+      const { result } = renderHook(() => useClusterDeleteAllowed(ClusterIssuerModel));
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.allowed).toBe(false);
+    });
+  });
+
+  describe('useNamespacedDeleteAllowed', () => {
+    it('allows namespaced issuer delete when access review permits in app', () => {
+      mockUseAccessReview.mockImplementation((attrs) => {
+        if (attrs.resource === 'issuers' && attrs.verb === 'delete' && attrs.namespace === 'app') {
+          return [true, false];
+        }
+        return [false, false];
+      });
+
+      const { result } = renderHook(() => useNamespacedDeleteAllowed(IssuerModel, 'app'));
+
+      expect(result.current.allowed).toBe(true);
+      expect(mockUseAccessReview).toHaveBeenCalledWith(
+        {
+          group: 'cert-manager.io',
+          resource: 'issuers',
+          verb: 'delete',
+          namespace: 'app',
+        },
+        undefined,
+        false,
+      );
+    });
+
+    it('reports loading while namespaced delete access review is pending', () => {
+      mockUseAccessReview.mockReturnValue([false, true]);
+
+      const { result } = renderHook(() => useNamespacedDeleteAllowed(IssuerModel, 'app'));
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.allowed).toBe(false);
     });
   });
 

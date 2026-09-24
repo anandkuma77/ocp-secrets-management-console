@@ -12,6 +12,7 @@ import {
   useOptionalClusterListWatch,
   combineDualListWatchLoaded,
   combineDualListWatchError,
+  useDualScopeDeleteAllowed,
 } from '../hooks/useClusterWatchAllowed';
 
 const getProviderType = (secretStore: SecretStore): string => {
@@ -197,6 +198,11 @@ export const SecretStoresTable: React.FC<SecretStoresTableProps> = ({ selectedPr
 
   const loaded = combineDualListWatchLoaded(secretStoresLoaded, clusterSecretStoresWatch);
   const loadError = combineDualListWatchError(secretStoresError, clusterSecretStoresWatch);
+  const canDeleteRow = useDualScopeDeleteAllowed(
+    SecretStoreModel,
+    ClusterSecretStoreModel,
+    selectedProject,
+  );
 
   const columns = [
     { title: t('Name'), width: 15 },
@@ -250,17 +256,21 @@ export const SecretStoresTable: React.FC<SecretStoresTableProps> = ({ selectedPr
                 label: t('Inspect {{kind}}', { kind: typeLabel }),
                 onClick: () => handleInspect(secretStore),
               },
-              {
-                key: 'delete',
-                label: t('Delete {{kind}}', { kind: typeLabel }),
-                onClick: () => handleDelete(secretStore),
-              },
+              ...(canDeleteRow(secretStore.metadata.namespace)
+                ? [
+                    {
+                      key: 'delete',
+                      label: t('Delete {{kind}}', { kind: typeLabel }),
+                      onClick: () => handleDelete(secretStore),
+                    },
+                  ]
+                : []),
             ]}
           />,
         ],
       };
     });
-  }, [secretStores, clusterSecretStores, loaded, t]);
+  }, [secretStores, clusterSecretStores, loaded, t, canDeleteRow]);
 
   return (
     <>

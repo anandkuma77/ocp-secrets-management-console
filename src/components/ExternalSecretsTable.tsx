@@ -24,6 +24,7 @@ import {
   useOptionalClusterListWatch,
   combineDualListWatchLoaded,
   combineDualListWatchError,
+  useDualScopeDeleteAllowed,
 } from '../hooks/useClusterWatchAllowed';
 
 /** Parse Kubernetes/Go duration string (e.g. "1h", "30m", "1h30m") to milliseconds */
@@ -230,6 +231,11 @@ export const ExternalSecretsTable: React.FC<ExternalSecretsTableProps> = ({ sele
 
   const loaded = combineDualListWatchLoaded(externalSecretsLoaded, clusterExternalSecretsWatch);
   const loadError = combineDualListWatchError(externalSecretsError, clusterExternalSecretsWatch);
+  const canDeleteRow = useDualScopeDeleteAllowed(
+    ExternalSecretModel,
+    ClusterExternalSecretModel,
+    selectedProject,
+  );
 
   const columns = [
     { title: t('Name'), width: 15 },
@@ -305,17 +311,23 @@ export const ExternalSecretsTable: React.FC<ExternalSecretsTableProps> = ({ sele
                 label: t('Inspect {{kind}}', { kind: resourceKind }),
                 onClick: () => handleInspect(resource),
               },
-              {
-                key: 'delete',
-                label: t('Delete {{kind}}', { kind: resourceKind }),
-                onClick: () => handleDelete(resource),
-              },
+              ...(canDeleteRow(
+                isClusterExternalSecret(resource) ? undefined : resource.metadata.namespace,
+              )
+                ? [
+                    {
+                      key: 'delete',
+                      label: t('Delete {{kind}}', { kind: resourceKind }),
+                      onClick: () => handleDelete(resource),
+                    },
+                  ]
+                : []),
             ]}
           />,
         ],
       };
     });
-  }, [allSecrets, loaded, t]);
+  }, [allSecrets, loaded, t, canDeleteRow]);
 
   return (
     <>
