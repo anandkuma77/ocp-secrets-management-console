@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { SecretStoresTable } from './SecretStoresTable';
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
 import { useOptionalClusterListWatch } from '../hooks/useClusterWatchAllowed';
+import {
+  allowAllDualScopeDelete,
+  createFullAccessOptionalClusterWatch,
+} from '../test-utils/fullAccessRbacMocks';
 
 jest.mock('@openshift-console/dynamic-plugin-sdk', () => ({
   useK8sWatchResource: jest.fn(),
@@ -30,6 +34,12 @@ const mockUseDualScopeDeleteAllowed = useDualScopeDeleteAllowed as jest.Mock;
 const nsStore = {
   kind: 'SecretStore',
   metadata: { name: 'store', namespace: 'app', creationTimestamp: '2026-01-01T00:00:00Z' },
+  spec: { provider: { aws: { service: 'SecretsManager', region: 'us-east-1' } } },
+};
+
+const clusterStore = {
+  kind: 'ClusterSecretStore',
+  metadata: { name: 'cluster-store', creationTimestamp: '2026-01-01T00:00:00Z' },
   spec: { provider: { aws: { service: 'SecretsManager', region: 'us-east-1' } } },
 };
 
@@ -74,5 +84,28 @@ describe('SecretStoresTable RBAC cluster watch gating', () => {
 
     await user.click(screen.getByRole('button', { name: /kebab dropdown toggle/i }));
     expect(screen.queryByRole('menuitem', { name: /Delete/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('SecretStoresTable full access (cluster-admin)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseK8sWatchResource.mockReturnValue([[nsStore], true, undefined]);
+    mockUseOptionalClusterListWatch.mockReturnValue(
+      createFullAccessOptionalClusterWatch([clusterStore]),
+    );
+    allowAllDualScopeDelete(mockUseDualScopeDeleteAllowed);
+  });
+
+  it('renders namespace and cluster secret stores with Delete action', async () => {
+    const user = userEvent.setup();
+    render(<SecretStoresTable selectedProject="app" />);
+
+    expect(screen.getByText('store')).toBeInTheDocument();
+    expect(screen.getByText('cluster-store')).toBeInTheDocument();
+    expect(screen.queryByTestId('secret-stores-table-error')).not.toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: /kebab dropdown toggle/i })[0]);
+    expect(screen.getByRole('menuitem', { name: /Delete/ })).toBeInTheDocument();
   });
 });

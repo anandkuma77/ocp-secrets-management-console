@@ -68,3 +68,23 @@ describe('SecretProviderClassTable RBAC watch gating', () => {
     expect(screen.queryByRole('menuitem', { name: /Delete/ })).not.toBeInTheDocument();
   });
 });
+
+describe('SecretProviderClassTable full access (cluster-admin)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useNamespacedWatchAllowed as jest.Mock).mockReturnValue({ allowed: true, loading: false });
+    mockUseK8sWatchResource.mockReturnValue([[spc], true, undefined]);
+    mockUseNamespacedOnlyDeleteAllowed.mockReturnValue(true);
+  });
+
+  it('renders secret provider classes with Delete action and no permission error', async () => {
+    const user = userEvent.setup();
+    render(<SecretProviderClassTable selectedProject="app" />);
+
+    expect(screen.getByText('azure-spc')).toBeInTheDocument();
+    expect(screen.queryByTestId('secret-provider-classes-table-error')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /kebab dropdown toggle/i }));
+    expect(screen.getByRole('menuitem', { name: /Delete/ })).toBeInTheDocument();
+  });
+});

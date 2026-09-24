@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { IssuersTable } from './IssuersTable';
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
 import { useOptionalClusterListWatch } from '../hooks/useClusterWatchAllowed';
+import {
+  allowAllDualScopeDelete,
+  createFullAccessOptionalClusterWatch,
+} from '../test-utils/fullAccessRbacMocks';
 
 jest.mock('@openshift-console/dynamic-plugin-sdk', () => ({
   useK8sWatchResource: jest.fn(),
@@ -82,6 +86,35 @@ describe('IssuersTable RBAC cluster watch gating', () => {
     render(<IssuersTable selectedProject="app" />);
 
     await user.click(screen.getByRole('button', { name: /kebab dropdown toggle/i }));
+    expect(screen.getByRole('menuitem', { name: /Delete/ })).toBeInTheDocument();
+  });
+});
+
+const clusterIssuer = {
+  metadata: { name: 'cluster-issuer', creationTimestamp: '2026-01-01T00:00:00Z' },
+  spec: { selfSigned: {} },
+};
+
+describe('IssuersTable full access (cluster-admin)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseK8sWatchResource.mockReturnValue([[namespaceIssuer], true, undefined]);
+    mockUseOptionalClusterListWatch.mockReturnValue(
+      createFullAccessOptionalClusterWatch([clusterIssuer]),
+    );
+    allowAllDualScopeDelete(mockUseDualScopeDeleteAllowed);
+  });
+
+  it('renders namespace and cluster issuers without permission errors', async () => {
+    const user = userEvent.setup();
+    render(<IssuersTable selectedProject="app" />);
+
+    expect(screen.getByText('ns-issuer')).toBeInTheDocument();
+    expect(screen.getByText('cluster-issuer')).toBeInTheDocument();
+    expect(screen.queryByTestId('issuers-table-error')).not.toBeInTheDocument();
+    expect(screen.queryByText(/You do not have permission to list/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: /kebab dropdown toggle/i })[0]);
     expect(screen.getByRole('menuitem', { name: /Delete/ })).toBeInTheDocument();
   });
 });

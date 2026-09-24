@@ -64,3 +64,22 @@ describe('CertificatesTable', () => {
     expect(screen.queryByRole('menuitem', { name: /Delete/ })).not.toBeInTheDocument();
   });
 });
+
+describe('CertificatesTable full access (cluster-admin)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseK8sWatchResource.mockReturnValue([[cert], true, undefined]);
+    mockUseNamespacedOnlyDeleteAllowed.mockReturnValue(true);
+  });
+
+  it('renders certificates with Delete action and no permission error', async () => {
+    const user = userEvent.setup();
+    render(<CertificatesTable selectedProject="app" />);
+
+    expect(screen.getByText('tls')).toBeInTheDocument();
+    expect(screen.queryByTestId('certificates-table-error')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /kebab dropdown toggle/i }));
+    expect(screen.getByRole('menuitem', { name: /Delete/ })).toBeInTheDocument();
+  });
+});
