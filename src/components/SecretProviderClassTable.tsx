@@ -23,6 +23,11 @@ import {
   useNamespacedWatchAllowed,
   useNamespacedOnlyDeleteAllowed,
 } from '../hooks/useClusterWatchAllowed';
+import {
+  formatDeleteErrorMessage,
+  formatResourceTableErrorMessage,
+  listErrorNamespace,
+} from '../utils/permissionErrors';
 
 const getProviderIcon = (provider: string) => {
   switch (provider.toLowerCase()) {
@@ -154,7 +159,10 @@ export const SecretProviderClassTable: React.FC<SecretProviderClassTableProps> =
       setDeleteModal((prev) => ({
         ...prev,
         isDeleting: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: formatDeleteErrorMessage(error, t, {
+          resourceCategory: t('SecretProviderClass'),
+          namespace: deleteModal.secretProviderClass?.metadata?.namespace,
+        }),
       }));
     }
   };
@@ -316,7 +324,10 @@ export const SecretProviderClassTable: React.FC<SecretProviderClassTableProps> =
         columns={columns}
         rows={rows}
         loading={!loaded}
-        error={loadError?.message}
+        error={formatResourceTableErrorMessage(loadError, t, {
+          resourceCategory: t('Secret Provider Classes'),
+          namespace: listErrorNamespace(selectedProject),
+        })}
         emptyStateTitle={t('No secret provider classes found')}
         emptyStateBody={
           selectedProject === 'all'

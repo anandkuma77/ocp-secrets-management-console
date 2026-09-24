@@ -24,6 +24,10 @@ import {
   isClusterGenerator,
 } from './crds';
 import { useDeleteEnabled } from '../hooks/usePluginConfig';
+import {
+  formatDeleteErrorMessage,
+  formatResourceTableErrorMessage,
+} from '../utils/permissionErrors';
 
 const isMissingCrdError = (error: { message?: string } | undefined): boolean => {
   const message = error?.message?.toLowerCase() || '';
@@ -241,7 +245,10 @@ export const GeneratorsTable: React.FC<GeneratorsTableProps> = ({ selectedProjec
       setDeleteModal((prev) => ({
         ...prev,
         isDeleting: false,
-        error: error instanceof Error ? error.message : 'Failed to delete generator',
+        error: formatDeleteErrorMessage(error, t, {
+          resourceCategory: t('Generators'),
+          namespace: deleteModal.generator?.metadata?.namespace,
+        }),
       }));
     }
   };
@@ -348,7 +355,14 @@ export const GeneratorsTable: React.FC<GeneratorsTableProps> = ({ selectedProjec
         columns={columns}
         rows={rows}
         loading={!loaded}
-        error={loadError}
+        error={
+          loadError
+            ? formatResourceTableErrorMessage(loadError, t, {
+                resourceCategory: t('Generators'),
+                namespace,
+              })
+            : undefined
+        }
         emptyStateTitle={t('No generators found')}
         emptyStateBody={
           selectedProject === 'all'

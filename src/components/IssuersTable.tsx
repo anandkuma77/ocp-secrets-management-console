@@ -15,6 +15,11 @@ import {
   combineDualListWatchError,
   useDualScopeDeleteAllowed,
 } from '../hooks/useClusterWatchAllowed';
+import {
+  formatDeleteErrorMessage,
+  formatResourceTableErrorMessage,
+  listErrorNamespace,
+} from '../utils/permissionErrors';
 
 const getIssuerType = (issuer: Issuer): string => {
   if (issuer.spec.acme) return 'ACME';
@@ -130,7 +135,12 @@ export const IssuersTable: React.FC<IssuersTableProps> = ({ selectedProject }) =
       setDeleteModal((prev) => ({
         ...prev,
         isDeleting: false,
-        error: error instanceof Error ? error.message : 'Failed to delete issuer',
+        error: formatDeleteErrorMessage(error, t, {
+          resourceCategory: deleteModal.issuer?.metadata?.namespace
+            ? t('Issuer')
+            : t('ClusterIssuer'),
+          namespace: deleteModal.issuer?.metadata?.namespace,
+        }),
       }));
     }
   };
@@ -236,7 +246,10 @@ export const IssuersTable: React.FC<IssuersTableProps> = ({ selectedProject }) =
         columns={columns}
         rows={rows}
         loading={!loaded}
-        error={loadError?.message}
+        error={formatResourceTableErrorMessage(loadError, t, {
+          resourceCategory: t('Issuers'),
+          namespace: listErrorNamespace(selectedProject),
+        })}
         emptyStateTitle={t('No issuers found')}
         emptyStateBody={
           selectedProject === 'all'

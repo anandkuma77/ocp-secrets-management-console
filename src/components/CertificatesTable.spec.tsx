@@ -39,6 +39,20 @@ describe('CertificatesTable', () => {
     expect(screen.queryByTestId('certificates-table-error')).not.toBeInTheDocument();
   });
 
+  it('shows friendly list permission message when certificate watch is forbidden', () => {
+    mockUseK8sWatchResource.mockReturnValue([
+      [],
+      true,
+      new Error('Forbidden: cannot list certificates.cert-manager.io'),
+    ]);
+
+    render(<CertificatesTable selectedProject="app" />);
+
+    const error = screen.getByTestId('certificates-table-error');
+    expect(error).toHaveTextContent('You do not have permission to list');
+    expect(error).not.toHaveTextContent('Forbidden: cannot');
+  });
+
   it('omits Delete when certificate delete is denied', async () => {
     const user = userEvent.setup();
     mockUseK8sWatchResource.mockReturnValue([[cert], true, undefined]);

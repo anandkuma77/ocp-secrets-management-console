@@ -55,6 +55,20 @@ describe('PushSecretsTable RBAC cluster watch gating', () => {
     expect(screen.queryByTestId('push-secrets-table-error')).not.toBeInTheDocument();
   });
 
+  it('shows friendly list permission message when namespaced watch is forbidden', () => {
+    mockUseK8sWatchResource.mockReturnValue([
+      [],
+      true,
+      new Error('Forbidden: cannot list pushsecrets.external-secrets.io'),
+    ]);
+
+    render(<PushSecretsTable selectedProject="app" />);
+
+    const error = screen.getByTestId('push-secrets-table-error');
+    expect(error).toHaveTextContent('You do not have permission to list');
+    expect(error).not.toHaveTextContent('Forbidden: cannot');
+  });
+
   it('omits Delete when push secret delete is denied', async () => {
     const user = userEvent.setup();
     mockUseDualScopeDeleteAllowed.mockReturnValue(() => false);

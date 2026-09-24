@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BundlesTable } from './BundlesTable';
+import { consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { useOptionalClusterListWatch } from '../hooks/useClusterWatchAllowed';
 
 jest.mock('@openshift-console/dynamic-plugin-sdk', () => ({
@@ -23,6 +24,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 const mockUseOptionalClusterListWatch = useOptionalClusterListWatch as jest.Mock;
+const mockConsoleFetch = consoleFetch as jest.Mock;
 const { useClusterOnlyDeleteAllowed } = jest.requireMock('../hooks/useClusterWatchAllowed');
 const mockUseClusterOnlyDeleteAllowed = useClusterOnlyDeleteAllowed as jest.Mock;
 
@@ -166,6 +168,16 @@ describe('BundlesTable', () => {
       render(<BundlesTable selectedProject="all" />);
 
       expect(screen.getByText(/Failed to fetch bundles/)).toBeInTheDocument();
+    });
+
+    it('shows friendly permission message for forbidden cluster list', () => {
+      setBundlesWatch([], true, new Error('Forbidden: cannot list bundles.trust.cert-manager.io'));
+
+      render(<BundlesTable selectedProject="all" />);
+
+      const error = screen.getByTestId('bundles-table-error');
+      expect(error).toHaveTextContent('You do not have permission to list');
+      expect(error).not.toHaveTextContent('Forbidden: cannot');
     });
   });
 
@@ -356,6 +368,31 @@ describe('BundlesTable', () => {
 
       const kebabButtons = screen.getAllByRole('button', { name: /kebab dropdown toggle/i });
       expect(kebabButtons.length).toBe(mockBundles.length);
+    });
+
+    it('shows friendly delete permission message when delete API returns 403', async () => {
+      const user = userEvent.setup();
+      mockUseClusterOnlyDeleteAllowed.mockReturnValue(true);
+      setBundlesWatch(mockBundles, true, undefined);
+      mockConsoleFetch.mockResolvedValue({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+        text: async () => 'user cannot delete bundles',
+      });
+
+      render(<BundlesTable selectedProject="all" />);
+
+      await user.click(screen.getAllByRole('button', { name: /kebab dropdown toggle/i })[0]);
+      await user.click(screen.getByRole('menuitem', { name: /Delete/ }));
+      await user.type(
+        screen.getByLabelText('Type resource name to confirm deletion'),
+        'organization-ca-bundle',
+      );
+      await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+      expect(await screen.findByText(/You do not have permission to delete/)).toBeInTheDocument();
+      expect(screen.queryByText(/user cannot delete bundles/)).not.toBeInTheDocument();
     });
   });
 });
