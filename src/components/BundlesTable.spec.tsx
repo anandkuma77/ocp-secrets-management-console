@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { BundlesTable } from './BundlesTable';
 import { consoleFetch } from '@openshift-console/dynamic-plugin-sdk';
 import { useOptionalClusterListWatch } from '../hooks/useClusterWatchAllowed';
+import { createFullAccessOptionalClusterWatch } from '../test-utils/fullAccessRbacMocks';
 
 jest.mock('@openshift-console/dynamic-plugin-sdk', () => ({
   consoleFetch: jest.fn(),
@@ -394,5 +395,27 @@ describe('BundlesTable', () => {
       expect(await screen.findByText(/You do not have permission to delete/)).toBeInTheDocument();
       expect(screen.queryByText(/user cannot delete bundles/)).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('BundlesTable full access (cluster-admin)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseOptionalClusterListWatch.mockReturnValue(
+      createFullAccessOptionalClusterWatch(mockBundles),
+    );
+    mockUseClusterOnlyDeleteAllowed.mockReturnValue(true);
+  });
+
+  it('renders cluster bundles with Delete action and no permission error', async () => {
+    const user = userEvent.setup();
+    render(<BundlesTable selectedProject="all" />);
+
+    expect(screen.getByText('organization-ca-bundle')).toBeInTheDocument();
+    expect(screen.getByText('java-app-truststore')).toBeInTheDocument();
+    expect(screen.queryByTestId('bundles-table-error')).not.toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: /kebab dropdown toggle/i })[0]);
+    expect(screen.getByRole('menuitem', { name: /Delete/ })).toBeInTheDocument();
   });
 });

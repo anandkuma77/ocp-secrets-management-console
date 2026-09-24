@@ -827,3 +827,32 @@ describe('GeneratorsTable', () => {
     });
   });
 });
+
+describe('GeneratorsTable full access (cluster-admin)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockConsoleFetch.mockReset();
+    mockUseClusterWatchAllowed.mockImplementation(() => ({ allowed: true, loading: false }));
+    const { useNamespacedDeleteAllowed, useClusterDeleteAllowed } = jest.requireMock(
+      '../hooks/useClusterWatchAllowed',
+    );
+    (useNamespacedDeleteAllowed as jest.Mock).mockReturnValue({ allowed: true, loading: false });
+    (useClusterDeleteAllowed as jest.Mock).mockReturnValue({ allowed: true, loading: false });
+    mockWatches({
+      Password: mockPasswords,
+      ClusterGenerator: mockClusterGenerators,
+    });
+  });
+
+  it('renders namespace and cluster generators with Delete action and no permission error', async () => {
+    const user = userEvent.setup();
+    render(<GeneratorsTable selectedProject="app" />);
+
+    expect(await screen.findByText('db-password')).toBeInTheDocument();
+    expect(screen.getByText('cluster-password')).toBeInTheDocument();
+    expect(screen.queryByTestId('generators-table-error')).not.toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: /kebab dropdown toggle/i })[0]);
+    expect(screen.getByRole('menuitem', { name: /Delete Password/ })).toBeInTheDocument();
+  });
+});

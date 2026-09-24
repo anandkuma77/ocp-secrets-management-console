@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { PushSecretsTable } from './PushSecretsTable';
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
 import { useOptionalClusterListWatch } from '../hooks/useClusterWatchAllowed';
+import {
+  allowAllDualScopeDelete,
+  createFullAccessOptionalClusterWatch,
+} from '../test-utils/fullAccessRbacMocks';
 
 jest.mock('@openshift-console/dynamic-plugin-sdk', () => ({
   useK8sWatchResource: jest.fn(),
@@ -32,6 +36,15 @@ const nsPush = {
   metadata: { name: 'push', namespace: 'app', creationTimestamp: '2026-01-01T00:00:00Z' },
   spec: {
     secretStoreRefs: [{ name: 'store', kind: 'SecretStore' }],
+    selector: { secret: { name: 'src' } },
+  },
+};
+
+const clusterPush = {
+  kind: 'ClusterPushSecret',
+  metadata: { name: 'cluster-push', creationTimestamp: '2026-01-01T00:00:00Z' },
+  spec: {
+    secretStoreRefs: [{ name: 'store', kind: 'ClusterSecretStore' }],
     selector: { secret: { name: 'src' } },
   },
 };
@@ -77,5 +90,28 @@ describe('PushSecretsTable RBAC cluster watch gating', () => {
 
     await user.click(screen.getByRole('button', { name: /kebab dropdown toggle/i }));
     expect(screen.queryByRole('menuitem', { name: /Delete/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('PushSecretsTable full access (cluster-admin)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseK8sWatchResource.mockReturnValue([[nsPush], true, undefined]);
+    mockUseOptionalClusterListWatch.mockReturnValue(
+      createFullAccessOptionalClusterWatch([clusterPush]),
+    );
+    allowAllDualScopeDelete(mockUseDualScopeDeleteAllowed);
+  });
+
+  it('renders namespace and cluster push secrets with Delete action', async () => {
+    const user = userEvent.setup();
+    render(<PushSecretsTable selectedProject="app" />);
+
+    expect(screen.getByText('push')).toBeInTheDocument();
+    expect(screen.getByText('cluster-push')).toBeInTheDocument();
+    expect(screen.queryByTestId('push-secrets-table-error')).not.toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: /kebab dropdown toggle/i })[0]);
+    expect(screen.getByRole('menuitem', { name: /Delete/ })).toBeInTheDocument();
   });
 });
