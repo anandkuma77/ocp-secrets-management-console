@@ -61,6 +61,20 @@ describe('IssuersTable RBAC cluster watch gating', () => {
     expect(screen.queryByRole('menuitem', { name: /Delete/ })).not.toBeInTheDocument();
   });
 
+  it('shows friendly list permission message when namespaced watch is forbidden', () => {
+    mockUseK8sWatchResource.mockReturnValue([
+      [],
+      true,
+      new Error('Forbidden: user "u" cannot list resource "issuers" in namespace app'),
+    ]);
+
+    render(<IssuersTable selectedProject="app" />);
+
+    const error = screen.getByTestId('issuers-table-error');
+    expect(error).toHaveTextContent('You do not have permission to list');
+    expect(error).not.toHaveTextContent('Forbidden: user');
+  });
+
   it('shows Delete when namespaced issuer delete is allowed', async () => {
     const user = userEvent.setup();
     mockUseDualScopeDeleteAllowed.mockReturnValue(() => true);

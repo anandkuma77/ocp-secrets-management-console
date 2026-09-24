@@ -14,6 +14,11 @@ import {
   combineDualListWatchError,
   useDualScopeDeleteAllowed,
 } from '../hooks/useClusterWatchAllowed';
+import {
+  formatDeleteErrorMessage,
+  formatResourceTableErrorMessage,
+  listErrorNamespace,
+} from '../utils/permissionErrors';
 
 const getProviderType = (secretStore: SecretStore): string => {
   const provider = secretStore.spec?.provider;
@@ -172,7 +177,12 @@ export const SecretStoresTable: React.FC<SecretStoresTableProps> = ({ selectedPr
       setDeleteModal((prev) => ({
         ...prev,
         isDeleting: false,
-        error: error instanceof Error ? error.message : 'Failed to delete secret store',
+        error: formatDeleteErrorMessage(error, t, {
+          resourceCategory: deleteModal.secretStore?.metadata?.namespace
+            ? t('SecretStore')
+            : t('ClusterSecretStore'),
+          namespace: deleteModal.secretStore?.metadata?.namespace,
+        }),
       }));
     }
   };
@@ -278,7 +288,10 @@ export const SecretStoresTable: React.FC<SecretStoresTableProps> = ({ selectedPr
         columns={columns}
         rows={rows}
         loading={!loaded}
-        error={loadError?.message}
+        error={formatResourceTableErrorMessage(loadError, t, {
+          resourceCategory: t('Secret Stores'),
+          namespace: listErrorNamespace(selectedProject),
+        })}
         emptyStateTitle={t('No secret stores found')}
         emptyStateBody={
           selectedProject === 'all'

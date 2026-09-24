@@ -181,6 +181,20 @@ describe('GeneratorsTable', () => {
       expect(await screen.findByText(/Failed to fetch generators/)).toBeInTheDocument();
     });
 
+    it('shows friendly permission message when every generator watch is forbidden', async () => {
+      mockUseK8sWatchResource.mockReturnValue([
+        [],
+        true,
+        new Error('Forbidden: cannot list password.generators.external-secrets.io'),
+      ]);
+
+      render(<GeneratorsTable selectedProject="app" />);
+
+      const error = await screen.findByTestId('generators-table-error');
+      expect(error).toHaveTextContent('You do not have permission to list');
+      expect(error).not.toHaveTextContent('Forbidden: cannot');
+    });
+
     it('treats missing CRD errors as empty rather than a table error', async () => {
       mockUseK8sWatchResource.mockReturnValue([
         [],
@@ -529,7 +543,8 @@ describe('GeneratorsTable', () => {
       await user.type(screen.getByLabelText('Type resource name to confirm deletion'), 'db-password');
       await user.click(screen.getByRole('button', { name: 'Delete' }));
 
-      expect(await screen.findByText(/Delete failed: 403 Forbidden/)).toBeInTheDocument();
+      expect(await screen.findByText(/You do not have permission to delete/)).toBeInTheDocument();
+      expect(screen.queryByText(/Delete failed: 403 Forbidden/)).not.toBeInTheDocument();
     });
 
     it('closes the delete modal on cancel without calling the API', async () => {

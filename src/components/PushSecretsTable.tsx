@@ -26,6 +26,11 @@ import {
   combineDualListWatchError,
   useDualScopeDeleteAllowed,
 } from '../hooks/useClusterWatchAllowed';
+import {
+  formatDeleteErrorMessage,
+  formatResourceTableErrorMessage,
+  listErrorNamespace,
+} from '../utils/permissionErrors';
 
 const getPushSecretStatus = (pushSecret: PushSecretResource) => {
   if (!pushSecret.status?.conditions) {
@@ -105,7 +110,12 @@ export const PushSecretsTable: React.FC<PushSecretsTableProps> = ({ selectedProj
       setDeleteModal((prev) => ({
         ...prev,
         isDeleting: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: formatDeleteErrorMessage(error, t, {
+          resourceCategory: deleteModal.pushSecret?.metadata?.namespace
+            ? t('PushSecret')
+            : t('ClusterPushSecret'),
+          namespace: deleteModal.pushSecret?.metadata?.namespace,
+        }),
       }));
     }
   };
@@ -248,7 +258,10 @@ export const PushSecretsTable: React.FC<PushSecretsTableProps> = ({ selectedProj
         'PushSecret CRDs are not available. This feature requires External Secrets Operator v0.9.0 or later.',
       );
     }
-    return loadError?.message;
+    return formatResourceTableErrorMessage(loadError, t, {
+      resourceCategory: t('Push Secrets'),
+      namespace: listErrorNamespace(selectedProject),
+    });
   };
 
   return (

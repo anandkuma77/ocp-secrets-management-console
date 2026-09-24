@@ -12,6 +12,10 @@ import {
   useOptionalClusterListWatch,
   useClusterOnlyDeleteAllowed,
 } from '../hooks/useClusterWatchAllowed';
+import {
+  formatDeleteErrorMessage,
+  formatResourceTableErrorMessage,
+} from '../utils/permissionErrors';
 
 const getSyncedStatus = (bundle: Bundle) => {
   const syncedCondition = bundle.status?.conditions?.find(
@@ -140,7 +144,9 @@ export const BundlesTable: React.FC<BundlesTableProps> = ({ selectedProject }) =
       setDeleteModal((prev) => ({
         ...prev,
         isDeleting: false,
-        error: error instanceof Error ? error.message : 'Failed to delete bundle',
+        error: formatDeleteErrorMessage(error, t, {
+          resourceCategory: t('Trust Bundles'),
+        }),
       }));
     }
   };
@@ -224,7 +230,9 @@ export const BundlesTable: React.FC<BundlesTableProps> = ({ selectedProject }) =
         columns={columns}
         rows={rows}
         loading={!loaded}
-        error={loadError?.message}
+        error={formatResourceTableErrorMessage(loadError, t, {
+          resourceCategory: t('Trust Bundles'),
+        })}
         emptyStateTitle={t('No trust bundles found')}
         emptyStateBody={
           selectedProject === 'all'

@@ -45,6 +45,18 @@ describe('SecretProviderClassTable RBAC watch gating', () => {
     expect(screen.getByText('No secret provider classes found')).toBeInTheDocument();
   });
 
+  it('shows friendly list permission message when watch returns forbidden', () => {
+    (useNamespacedWatchAllowed as jest.Mock).mockReturnValue({ allowed: true, loading: false });
+    const forbidden = new Error('Forbidden: cannot list secretproviderclasses');
+    mockUseK8sWatchResource.mockImplementation(() => [[], true, forbidden]);
+
+    render(<SecretProviderClassTable selectedProject="app" />);
+
+    const error = screen.getByTestId('secret-provider-classes-table-error');
+    expect(error).toHaveTextContent('You do not have permission to list');
+    expect(error).not.toHaveTextContent('Forbidden: cannot');
+  });
+
   it('omits Delete when secret provider class delete is denied', async () => {
     const user = userEvent.setup();
     mockUseK8sWatchResource.mockReturnValue([[spc], true, undefined]);

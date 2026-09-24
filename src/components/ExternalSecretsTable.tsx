@@ -26,6 +26,11 @@ import {
   combineDualListWatchError,
   useDualScopeDeleteAllowed,
 } from '../hooks/useClusterWatchAllowed';
+import {
+  formatDeleteErrorMessage,
+  formatResourceTableErrorMessage,
+  listErrorNamespace,
+} from '../utils/permissionErrors';
 
 /** Parse Kubernetes/Go duration string (e.g. "1h", "30m", "1h30m") to milliseconds */
 function parseDurationMs(duration: string): number {
@@ -196,7 +201,12 @@ export const ExternalSecretsTable: React.FC<ExternalSecretsTableProps> = ({ sele
       setDeleteModal((prev) => ({
         ...prev,
         isDeleting: false,
-        error: error instanceof Error ? error.message : 'Failed to delete external secret',
+        error: formatDeleteErrorMessage(error, t, {
+          resourceCategory: deleteModal.externalSecret?.metadata?.namespace
+            ? t('ExternalSecret')
+            : t('ClusterExternalSecret'),
+          namespace: deleteModal.externalSecret?.metadata?.namespace,
+        }),
       }));
     }
   };
@@ -335,7 +345,10 @@ export const ExternalSecretsTable: React.FC<ExternalSecretsTableProps> = ({ sele
         columns={columns}
         rows={rows}
         loading={!loaded}
-        error={loadError?.message}
+        error={formatResourceTableErrorMessage(loadError, t, {
+          resourceCategory: t('External Secrets'),
+          namespace: listErrorNamespace(selectedProject),
+        })}
         emptyStateTitle={t('No external secrets found')}
         emptyStateBody={
           selectedProject === 'all'
