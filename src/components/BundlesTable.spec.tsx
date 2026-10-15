@@ -18,6 +18,10 @@ jest.mock('../hooks/useClusterWatchAllowed', () => {
   };
 });
 
+jest.mock('../hooks/usePluginConfig', () => ({
+  useDeleteEnabled: () => true,
+}));
+
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
